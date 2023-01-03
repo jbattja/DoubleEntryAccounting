@@ -41,17 +41,17 @@ public class InitialSetup {
                 throw new IllegalArgumentException("PSP Account should be number 1");
             }
 
-            // SETUP Company Facebook
-            Account fb = new Account("Facebook", Account.AccountType.COMPANY);
-            fb = accountService.createAccount(fb);
-            Account fbGames = accountService.createAccount(new Account("Facebook_Games", Account.AccountType.MERCHANT, fb));
-            Account fbAds = accountService.createAccount(new Account("Facebook_Ads", Account.AccountType.MERCHANT, fb));
+            // SETUP Company TechInc
+            Account techInc = new Account("TechInc", Account.AccountType.COMPANY);
+            techInc = accountService.createAccount(techInc);
+            Account techIncGames = accountService.createAccount(new Account("TechInc_Games", Account.AccountType.MERCHANT, techInc));
+            Account techIncAds = accountService.createAccount(new Account("techInc_Ads", Account.AccountType.MERCHANT, techInc));
 
-            // SETUP Company Netflix
-            Account netflix = new Account("Netflix", Account.AccountType.COMPANY);
-            netflix = accountService.createAccount(netflix);
-            Account nfId = accountService.createAccount(new Account("Netflix_Indonesia", Account.AccountType.MERCHANT, netflix));
-            Account nfPh = accountService.createAccount(new Account("Netflix_Philippines", Account.AccountType.MERCHANT, netflix));
+            // SETUP Company StreamingInc
+            Account streamingInc = new Account("StreamingInc", Account.AccountType.COMPANY);
+            streamingInc = accountService.createAccount(streamingInc);
+            Account streamingIncIndonesia = accountService.createAccount(new Account("StreamingInc_Indonesia", Account.AccountType.MERCHANT, streamingInc));
+            Account streamingIncPhilippines = accountService.createAccount(new Account("StreamingInc_Philippines", Account.AccountType.MERCHANT, streamingInc));
 
             // SETUP Acquirers OVO, GCash, Visa, MC
             Account ovo = accountService.createAccount(new Account("Ovo", Account.AccountType.ACQUIRER));
@@ -59,20 +59,20 @@ public class InitialSetup {
             Account visa = accountService.createAccount(new Account("Visa", Account.AccountType.ACQUIRER));
             Account mc = accountService.createAccount(new Account("Mastercard", Account.AccountType.ACQUIRER));
 
-            Account ovoAggr = accountService.createAccount(new Account("OVO_Aggr", Account.AccountType.ACQUIRER_ACCOUNT, ovo));
-            Account gcashAggr = accountService.createAccount(new Account("GCASH_Aggr", Account.AccountType.ACQUIRER_ACCOUNT, gcash));
-            Account visaIdNf= accountService.createAccount(new Account("VISA_ID_Netflix", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaIdFb = accountService.createAccount(new Account("VISA_ID_Facebook", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaPhNf = accountService.createAccount(new Account("VISA_PH_Netflix", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaPhFb = accountService.createAccount(new Account("VISA_PH_Facebook", Account.AccountType.ACQUIRER_ACCOUNT, visa));
+            Account ovoAggr = accountService.createAccount(new Account("OVO_Aggregator", Account.AccountType.ACQUIRER_ACCOUNT, ovo));
+            Account gcashAggr = accountService.createAccount(new Account("GCASH_Aggregator", Account.AccountType.ACQUIRER_ACCOUNT, gcash));
+            Account visaIdStreamingInc= accountService.createAccount(new Account("VISA_ID_StreamingInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
+            Account visaIdTechInc = accountService.createAccount(new Account("VISA_ID_TechInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
+            Account visaPhStreamingInc = accountService.createAccount(new Account("VISA_PH_StreamingInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
+            Account visaPhTechInc = accountService.createAccount(new Account("VISA_PH_TechInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
             Account mcId = accountService.createAccount(new Account("MC_ID", Account.AccountType.ACQUIRER_ACCOUNT, mc));
             Account mcPh = accountService.createAccount(new Account("MC_PH", Account.AccountType.ACQUIRER_ACCOUNT, mc));
 
             log.info("Creating a couple of transactions");
-            Transaction transaction1 = transactionService.newPayment(new Amount("IDR",100000L),nfId,ovoAggr);
-            Transaction transaction2 = transactionService.newPayment(new Amount("PHP",200L),nfPh,visaPhFb);
-            Transaction transaction3 = transactionService.newPayment(new Amount("IDR",400000L),fbGames,visaIdFb);
-            Transaction transaction4 = transactionService.newPayment(new Amount("PHP",300L),fbGames,gcashAggr);
+            Transaction transaction1 = transactionService.newPayment(new Amount("IDR",100000L),streamingIncIndonesia,ovoAggr);
+            Transaction transaction2 = transactionService.newPayment(new Amount("PHP",200L),streamingIncPhilippines,visaPhTechInc);
+            Transaction transaction3 = transactionService.newPayment(new Amount("IDR",400000L),techIncGames,visaIdTechInc);
+            Transaction transaction4 = transactionService.newPayment(new Amount("PHP",300L),techIncGames,gcashAggr);
 
             log.info("Creating some bookings");
             bookingService.book(transaction1, EventType.REFUSED);

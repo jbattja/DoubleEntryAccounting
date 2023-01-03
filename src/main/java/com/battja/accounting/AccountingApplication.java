@@ -33,26 +33,9 @@ public class AccountingApplication {
 	}
 
 	@Bean
-	public CommandLineRunner demo(InitialSetup initialSetup, BatchService batchService, AccountService accountService,
-								  BookingService bookingService, TransactionService transactionService, BatchRepository batchRepository) {
+	public CommandLineRunner demo(InitialSetup initialSetup) {
 		return(args) -> {
 			// initialSetup.init();
-
-			/**
-			Account merchant = accountService.getAccount("Netflix_Indonesia");
-			Account AcqAccount = accountService.getAccount("VISA_ID_Facebook");
-			Amount amount = new Amount("IDR",100000L);
-
-			Transaction transaction = transactionService.newPayment(amount,merchant,AcqAccount);
-			bookingService.book(transaction, EventType.RECEIVED);
-			bookingService.book(transaction, EventType.REFUSED);
-
-			Set<Journal> journals = transactionService.getJournalsByTransaction(transactionService.getByReference(transaction.getTransactionReference()));
-			log.info(journals.size() + " journals found:");
-			for (Journal b : journals) {
-				log.info(b.toString());
-			}
-			 **/
 		};
 
 	}
