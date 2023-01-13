@@ -26,8 +26,6 @@ import java.util.Set;
 @EnableTransactionManagement
 public class AccountingApplication {
 
-	private static final Logger log = LoggerFactory.getLogger(AccountingApplication.class);
-
 	public static void main(String[] args) {
 		SpringApplication.run(AccountingApplication.class, args);
 	}
@@ -35,7 +33,7 @@ public class AccountingApplication {
 	@Bean
 	public CommandLineRunner demo(InitialSetup initialSetup) {
 		return(args) -> {
-			// initialSetup.init();
+			initialSetup.init();
 		};
 
 	}

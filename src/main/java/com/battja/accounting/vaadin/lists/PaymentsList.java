@@ -38,7 +38,7 @@ public class PaymentsList extends VerticalLayout {
         grid.removeAllColumns();
         Grid.Column<Transaction> merchantColumn = grid.addColumn(transaction -> transaction.getMerchantAccount().getAccountName()).setHeader("Merchant");
         Grid.Column<Transaction> referenceColumn = grid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
-        grid.addColumn(transactionService::getLatestJournal).setHeader("Status");
+        Grid.Column<Transaction> statusColumn =  grid.addColumn(Transaction::getStatus).setHeader("Status");
         Grid.Column<Transaction> currencyColumn = grid.addColumn(Transaction::getCurrency).setHeader("Currency");
         Grid.Column<Transaction> amountColumn = grid.addColumn(Transaction::getAmount).setHeader("Amount");
         Grid.Column<Transaction> acquirerAccountColumn = grid.addColumn(transaction -> transaction.getAcquirerAccount().getAccountName()).setHeader("Acquirer Account");
@@ -48,6 +48,7 @@ public class PaymentsList extends VerticalLayout {
         HeaderRow headerRow = grid.appendHeaderRow();
         headerRow.getCell(merchantColumn).setComponent(new FilterHeader(transactionFilter::setMerchant));
         headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
+        headerRow.getCell(statusColumn).setComponent(new FilterHeader(transactionFilter::setStatus));
         headerRow.getCell(currencyColumn).setComponent(new FilterHeader(transactionFilter::setCurrency));
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
         headerRow.getCell(acquirerAccountColumn).setComponent(new FilterHeader(transactionFilter::setAcquirerAccount));
@@ -63,6 +64,7 @@ public class PaymentsList extends VerticalLayout {
 
         private String merchant;
         private String reference;
+        private String status;
         private String currency;
         private String amount;
         private String acquirerAccount;
@@ -79,6 +81,11 @@ public class PaymentsList extends VerticalLayout {
 
         public void setReference(String reference) {
             this.reference = reference;
+            this.dataView.refreshAll();
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
             this.dataView.refreshAll();
         }
 
@@ -101,6 +108,7 @@ public class PaymentsList extends VerticalLayout {
             return (
                     matches(transaction.getMerchantAccount().getAccountName(), merchant)
                             && matches(transaction.getTransactionReference(), reference)
+                            && matches(transaction.getStatus(), status)
                             && matches((transaction.getCurrency()),currency)
                             && matches((transaction.getAmount().toString()),amount)
                             && matches((transaction.getAcquirerAccount().getAccountName()),acquirerAccount)

@@ -20,12 +20,10 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
     final static Logger log = LoggerFactory.getLogger(AccountDetailsView.class);
 
     private final AccountService accountService;
-    private Account account;
     private Integer accountId;
 
     public AccountDetailsView(AccountService accountService) {
         this.accountService = accountService;
-        updateView();
     }
 
     @Override
@@ -40,13 +38,13 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
 
     private void updateView() {
         removeAll();
-        account = accountService.getAccount(accountId);
+        Account account = accountService.getAccount(accountId);
         if (account != null) {
             add(new H3("Account: " + account.getAccountName()));
 
             ReadOnlyForm form = new ReadOnlyForm();
-            form.addField("Name",account.getAccountName());
-            form.addField("Type",account.getAccountType().toString());
+            form.addField("Name", account.getAccountName());
+            form.addField("Type", account.getAccountType().toString());
             if (account.getParentId() != null) {
                 Account parent = accountService.getParent(account);
                 if (parent != null) {

@@ -8,6 +8,7 @@ import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.repositories.BookingRepository;
 import com.battja.accounting.repositories.JournalRepository;
+import com.battja.accounting.repositories.TransactionRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ public class BookingService {
         if (!event.validateTransactions(transactions)) {
             throw new BookingException("Incorrect input of transactions for this BookingEvent " + event.getEventTypeName());
         }
-        event.bookInternal(transactions);
+        event.book(transactions);
         for (Booking booking : event.getBookings()) { // set batches
             booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
         }
@@ -65,6 +66,9 @@ public class BookingService {
             log.info("Created booking " + booking);
             batchService.updateBatchEntries(booking);
         }
+        for (Transaction t : transactions) {
+            transactionRepository.save(t);
+        }
         return journal;
     }
 
@@ -74,6 +78,8 @@ public class BookingService {
     JournalRepository journalRepository;
     @Autowired
     BookingRepository bookingRepository;
+    @Autowired
+    TransactionRepository transactionRepository;
 
 
 }

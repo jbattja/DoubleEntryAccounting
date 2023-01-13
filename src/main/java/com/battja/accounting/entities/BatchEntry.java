@@ -17,9 +17,8 @@ public class BatchEntry {
     @ManyToMany
     @JoinTable(
             name = "journals_to_batch_entries",
-            joinColumns = @JoinColumn(name = "journal_id"),
-            inverseJoinColumns = @JoinColumn(name = "batch_entry_id"))
-    @JoinColumn(name = "journal_id")
+            joinColumns = @JoinColumn(name = "batch_entry_id"),
+            inverseJoinColumns = @JoinColumn(name = "journal_id"))
     private Set<Journal> journals;
     @ManyToOne
     @JoinColumn(name = "transaction_id")

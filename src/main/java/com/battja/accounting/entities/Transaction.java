@@ -1,12 +1,7 @@
 package com.battja.accounting.entities;
 
-import com.battja.accounting.journals.Amount;
 import com.battja.accounting.util.CommonUtil;
 import jakarta.persistence.*;
-import org.springframework.lang.NonNull;
-
-import java.util.List;
-import java.util.Set;
 
 @Entity
 public class Transaction {
@@ -23,7 +18,7 @@ public class Transaction {
     @GeneratedValue
     private Integer id;
     private String transactionReference;
-    private String modificationReference;
+    private String originalReference;
     @Enumerated(EnumType.STRING)
     private TransactionType type;
     @ManyToOne
@@ -32,6 +27,7 @@ public class Transaction {
     private Account acquirerAccount;
     private Long amount;
     private String currency;
+    private String status;
 
     public Transaction() {}
 
@@ -39,7 +35,7 @@ public class Transaction {
     public String toString() {
         return String.format(
                 "'%s'[id=%d, transactionReference='%s', modificationReference='%s', merchantAccount='%s', acquirerAccount='%s', amount='%s' '%d']",
-                type, id, transactionReference, modificationReference, merchantAccount.getAccountName(), acquirerAccount.getAccountName(), currency, amount);
+                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), acquirerAccount.getAccountName(), currency, amount);
     }
 
     public Integer getId() {
@@ -58,12 +54,12 @@ public class Transaction {
         this.transactionReference = transactionReference;
     }
 
-    public String getModificationReference() {
-        return modificationReference;
+    public String getOriginalReference() {
+        return originalReference;
     }
 
-    public void setModificationReference(String modificationReference) {
-        this.modificationReference = modificationReference;
+    public void setOriginalReference(String originalReference) {
+        this.originalReference = originalReference;
     }
 
     public TransactionType getType() {
@@ -106,4 +102,11 @@ public class Transaction {
         this.currency = currency;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

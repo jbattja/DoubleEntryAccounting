@@ -30,6 +30,9 @@ public class InitialSetup {
      */
     @Transactional
     public void init() {
+        if (accountService.getAccount(Account.DEFAULT_PSP_ACCOUNT_ID) != null) {
+            return;
+        }
         log.info("doing init for all accounts");
 
         try {
@@ -45,7 +48,7 @@ public class InitialSetup {
             Account techInc = new Account("TechInc", Account.AccountType.COMPANY);
             techInc = accountService.createAccount(techInc);
             Account techIncGames = accountService.createAccount(new Account("TechInc_Games", Account.AccountType.MERCHANT, techInc));
-            Account techIncAds = accountService.createAccount(new Account("techInc_Ads", Account.AccountType.MERCHANT, techInc));
+            Account techIncAds = accountService.createAccount(new Account("TechInc_Ads", Account.AccountType.MERCHANT, techInc));
 
             // SETUP Company StreamingInc
             Account streamingInc = new Account("StreamingInc", Account.AccountType.COMPANY);

@@ -7,23 +7,23 @@ import org.springframework.lang.NonNull;
 
 import java.util.Set;
 
-public class ReceivedEvent extends BookingEvent {
+public class SettlementFailed extends BookingEvent {
 
     @Override
     public String getEventTypeName() {
-        return "Received";
+        return "Settlement Failed";
     }
 
     @Override
     protected Transaction.TransactionType[] requiredTransactionTypes() {
-        return new Transaction.TransactionType[]{Transaction.TransactionType.PAYMENT};
+        return new Transaction.TransactionType[]{Transaction.TransactionType.PAYMENT, Transaction.TransactionType.CAPTURE};
     }
 
     @Override
     public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
-        Transaction payment = transactions.iterator().next(); // already validated
-        addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getCreditAmount(payment), payment);
-        addBooking(payment.getAcquirerAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
+        Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE, transactions);
+        addBooking(capture.getMerchantAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
+        addBooking(capture.getAcquirerAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
     }
 
 }

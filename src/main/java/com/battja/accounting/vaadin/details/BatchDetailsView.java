@@ -4,12 +4,14 @@ import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.services.BatchService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
@@ -136,16 +138,24 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
     private void endBatchPeriod() {
         boolean success = batchService.endBatchPeriod(batch.getId());
         if (!success) {
-            //TODO some notification
+            Notification notification = new NotificationWithCloseButton("Unable to end batch period",false);
+            notification.open();
+            return;
         }
+        Notification notification = new NotificationWithCloseButton("Batch period ended", true);
+        notification.open();
         updateView();
     }
 
     private void closeBatch() {
         boolean success = batchService.closeBatch(batch.getId());
         if (!success) {
-            //TODO some notification
+            Notification notification = new NotificationWithCloseButton("Unable to close batch",false);
+            notification.open();
+            return;
         }
+        Notification notification = new NotificationWithCloseButton("Batch closed", true);
+        notification.open();
         updateView();
     }
 }

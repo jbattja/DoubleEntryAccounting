@@ -53,13 +53,16 @@ public class TransactionService {
     public Transaction newCapture(@NonNull Transaction payment, @NonNull Amount amount) throws BookingException {
         payment = transactionRepository.findById(payment.getId()).orElse(null);
         if (payment == null) {
+            log.warn("Capture failed, payment is null");
             throw new BookingException("Capture failed, invalid payment");
         }
         if (!payment.getCurrency().equals(amount.getCurrency())) {
-            throw new BookingException("Capture failed, invalid currency. Tried to capture " + amount + " for payment: " + payment );
+            log.info("Capture failed, invalid currency. Tried to capture " + amount + " for payment: " + payment);
+            throw new BookingException("Capture failed, invalid currency");
         }
-        if (getRemainingBalance(payment) < amount.getValue()) {
-            throw new BookingException("Capture failed, capture amount too high. Amount: " + amount + ", payment: " + payment);
+        if (getRemainingBalance(RegisterType.AUTHORISED,payment) < amount.getValue()) {
+            log.info("Capture failed, capture amount too high. Amount: " + amount + ", payment: " + payment);
+            throw new BookingException("Capture failed, capture amount too high");
         }
         Transaction capture = new Transaction();
         capture.setMerchantAccount(payment.getMerchantAccount());
@@ -67,8 +70,8 @@ public class TransactionService {
         capture.setAmount(amount.getValue());
         capture.setCurrency(amount.getCurrency());
         capture.setType(Transaction.TransactionType.CAPTURE);
-        capture.setTransactionReference(payment.getTransactionReference());
-        capture.setModificationReference(createTransactionReference());
+        capture.setTransactionReference(createTransactionReference());
+        capture.setOriginalReference(payment.getTransactionReference());
         capture = transactionRepository.save(capture);
         Set<Transaction> transactionSet = new HashSet<>();
         transactionSet.add(payment);
@@ -99,7 +102,6 @@ public class TransactionService {
         return bookingRepository.findByTransaction(transaction);
     }
 
-
     public Transaction getByReference(String transactionReference) {
         List<Transaction> list = transactionRepository.findByTransactionReference(transactionReference);
         if (list.isEmpty()) {
@@ -120,61 +122,81 @@ public class TransactionService {
     }
 
     public List<Transaction> listAllModifications(Transaction transaction) {
-        List<Transaction> transactions = transactionRepository.findByTransactionReference(transaction.getTransactionReference());
-        List<Transaction> modifications = new ArrayList<>();
-        for (Transaction t : transactions) {
-            if (!t.getType().equals(Transaction.TransactionType.PAYMENT)) {
-                modifications.add(t);
-            }
-        }
-        return modifications;
+        return transactionRepository.findByOriginalReference(transaction.getTransactionReference());
     }
 
-
-    public String getLatestJournal(Transaction transaction) {
-        List<BatchEntry> entries = batchEntryRepository.findByTransaction(transaction);
-        Set<Journal> journals = new HashSet<>();
-        for (BatchEntry e : entries) {
-            journals.addAll(e.getJournals());
-        }
-        Journal latestJournal = null;
-        for (Journal j : journals) {
-            if (latestJournal == null) {
-                latestJournal = j;
-            } else if (latestJournal.getDate().before(j.getDate())) {
-                latestJournal = j;
+    private long getRemainingBalance(RegisterType registerType, Transaction transaction) {
+        List<Booking> bookingsList = bookingRepository.findByTransaction(transaction);
+        long balance = 0L;
+        for (Booking b : bookingsList) {
+            if (b.getRegister().equals(registerType) && b.getAccount().getAccountName().equals(transaction.getMerchantAccount().getAccountName())) {
+                balance = balance + b.getAmount();
             }
         }
-        if (latestJournal != null) {
-            return latestJournal.getEventType();
-        }
-        return "";
+        return balance;
     }
 
     public boolean canTransactionCapture(@NonNull Transaction transaction) {
-        return getRemainingBalance(transaction) > 0L;
-    }
-
-    public long getRemainingBalance(@NonNull Transaction transaction) {
-        List<Booking> bookingsList = bookingRepository.findByTransaction(transaction);
-        long authorisedBalance = 0L;
-        for (Booking b : bookingsList) {
-            if (b.getRegister().equals(RegisterType.AUTHORISED) && b.getAccount().getAccountName().equals(transaction.getMerchantAccount().getAccountName())) {
-                authorisedBalance = authorisedBalance + b.getAmount();
-            }
-        }
-        return authorisedBalance;
+        return getRemainingBalance(RegisterType.AUTHORISED, transaction) > 0L;
     }
 
     public boolean canTransactionAuthorize(@NonNull Transaction transaction) {
-        List<Booking> bookingsList = bookingRepository.findByTransaction(transaction);
-        long receivedBalance = 0L;
-        for (Booking b : bookingsList) {
-            if (b.getRegister().equals(RegisterType.RECEIVED) && b.getAccount().getAccountName().equals(transaction.getMerchantAccount().getAccountName())) {
-                receivedBalance = receivedBalance + b.getAmount();
-            }
+        return getRemainingBalance(RegisterType.RECEIVED, transaction) > 0L;
+    }
+
+    public boolean isCaptureStillOpen(Transaction capture) {
+        return getRemainingBalance(RegisterType.CAPTURED, capture) > 0L;
+    }
+
+    public void authorizeOrRefusePayment(@NonNull Transaction transaction, boolean authorisedSuccess) throws BookingException {
+        transaction = transactionRepository.findById(transaction.getId()).orElse(null);
+        if (transaction == null) {
+            log.warn("Cannot authorize payment: payment is null");
+            throw new BookingException("Cannot authorize payment: invalid payment");
         }
-        return receivedBalance > 0L;
+        if (transaction.getType() != Transaction.TransactionType.PAYMENT) {
+            log.warn("Cannot authorize payment: type is: " + transaction.getType());
+            throw new BookingException("Cannot authorize payment: invalid payment");
+        }
+        Journal journal = null;
+        if (authorisedSuccess) {
+            journal = bookingService.book(transaction, EventType.AUTHORISED);
+        } else {
+            journal = bookingService.book(transaction, EventType.REFUSED);
+        }
+        if (journal == null) {
+            throw new BookingException("Failed to authorize payment");
+        }
+    }
+
+    public void bookSettlementFailed(@NonNull Transaction capture) throws BookingException {
+        capture = transactionRepository.findById(capture.getId()).orElse(null);
+        if (capture == null) {
+            log.warn("Cannot book settlement failed: capture is null");
+            throw new BookingException("Cannot book settlement failed: invalid capture");
+        }
+        if (capture.getType() != Transaction.TransactionType.CAPTURE) {
+            log.warn("Cannot book settlement failed: type is: " + capture.getType());
+            throw new BookingException("Cannot book settlement failed: invalid capture");
+        }
+        List<Transaction> paymentList = transactionRepository.findByTransactionReference(capture.getOriginalReference());
+        if (paymentList.size() != 1) {
+            log.warn("Expected 1 payment with reference " + capture.getOriginalReference() + ", but found " + paymentList.size());
+            throw new BookingException("Cannot book settlement failed");
+        }
+        long amount = getRemainingBalance(RegisterType.CAPTURED,capture);
+        if (amount == 0) {
+            log.info("Not able to book capture to settlement failed, no open amount");
+            throw new BookingException("Not able to book capture to settlement failed, no open amount");
+        }
+        capture.setAmount(amount); // overriding the amount, so we only close the remaining amount
+        Set<Transaction> transactionList = new HashSet<>();
+        transactionList.add(paymentList.get(0));
+        transactionList.add(capture);
+        Journal journal = bookingService.book(transactionList, EventType.SETTLEMENT_FAILED);
+        if (journal == null) {
+            throw new BookingException("Failed to book settlement failed");
+        }
     }
 
     @Autowired

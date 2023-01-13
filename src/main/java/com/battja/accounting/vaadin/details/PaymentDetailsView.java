@@ -9,6 +9,7 @@ import com.battja.accounting.journals.Amount;
 import com.battja.accounting.services.BookingService;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -36,15 +37,13 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
     final static Logger log = LoggerFactory.getLogger(PaymentDetailsView.class);
 
     private final TransactionService transactionService;
-    private final BookingService bookingService;
     private Integer paymentId;
     private Transaction payment;
     private IntegerField captureAmount;
     List<Transaction> modifications;
 
-    public PaymentDetailsView(TransactionService transactionService, BookingService bookingService) {
+    public PaymentDetailsView(TransactionService transactionService) {
         this.transactionService = transactionService;
-        this.bookingService = bookingService;
     }
 
     @Override
@@ -78,10 +77,9 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
 
     private ReadOnlyForm createDetailsForm() {
         ReadOnlyForm detailsForm = new ReadOnlyForm();
-        detailsForm.addField("Merchant", payment.getType().toString());
         detailsForm.addField("Reference", payment.getTransactionReference());
         detailsForm.addField("Amount", payment.getCurrency() + " " + payment.getAmount());
-        detailsForm.addField("Status", transactionService.getLatestJournal(payment));
+        detailsForm.addField("Status", payment.getStatus());
         detailsForm.addField("Merchant", payment.getMerchantAccount().getAccountName());
         detailsForm.addField("Acquirer account", payment.getAcquirerAccount().getAccountName());
         return detailsForm;
@@ -91,11 +89,16 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         HorizontalLayout buttonsLayout = new HorizontalLayout();
         Button authorizeButton = new Button("Authorize");
         authorizeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        authorizeButton.addClickListener(buttonClickEvent -> authorizePayment());
+        authorizeButton.addClickListener(buttonClickEvent -> authorizePayment(true));
+        Button rejectButton = new Button("Refuse");
+        rejectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        rejectButton.addClickListener(buttonClickEvent -> authorizePayment(false));
         if (!transactionService.canTransactionAuthorize(payment)) {
             authorizeButton.setEnabled(false);
+            rejectButton.setEnabled(false);
         }
         buttonsLayout.add(authorizeButton);
+        buttonsLayout.add(rejectButton);
 
         Div captureDiv = new Div();
         Button captureButton = new Button("Capture");
@@ -114,9 +117,16 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         buttonsLayout.add(captureDiv);
         return buttonsLayout;
     }
-
-    private void authorizePayment() {
-        bookingService.book(payment, EventType.AUTHORISED);
+    private void authorizePayment(boolean authoriseSuccess) {
+        try {
+            transactionService.authorizeOrRefusePayment(payment, authoriseSuccess);
+        } catch (BookingException e) {
+            NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(), false);
+            notification.open();
+            return;
+        }
+        NotificationWithCloseButton notification = new NotificationWithCloseButton(authoriseSuccess ? "Payment authorized" : "Payment refused", true);
+        notification.open();
         updateView();
     }
 
@@ -135,7 +145,8 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         try {
             transactionService.newCapture(payment, new Amount(payment.getCurrency(), captureAmount.getValue()));
         } catch (BookingException e) {
-            log.warn("Capture failed: " + e.getMessage());
+            NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);
+            notification.open();
         }
         updateView();
     }
@@ -151,11 +162,14 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         modificationGrid.removeAllColumns();
         modificationGrid.addColumn(transaction -> transaction.getType().toString()).setHeader("Type");
         modificationGrid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
-        modificationGrid.addColumn(transactionService::getLatestJournal).setHeader("Status");
+        modificationGrid.addColumn(Transaction::getStatus).setHeader("Status");
         modificationGrid.addColumn(Transaction::getCurrency).setHeader("Currency");
         modificationGrid.addColumn(Transaction::getAmount).setHeader("Amount");
         modificationGrid.addColumn(transaction -> transaction.getAcquirerAccount().getAccountName()).setHeader("Acquirer Account");
         modificationGrid.setAllRowsVisible(true);
+        modificationGrid.addItemClickListener(itemClickEvent -> modificationGrid.getUI().ifPresent(
+                ui -> ui.navigate(ModificationDetailsView.class,String.valueOf(itemClickEvent.getItem().getId()))
+        ));
         return modificationGrid;
     }
 

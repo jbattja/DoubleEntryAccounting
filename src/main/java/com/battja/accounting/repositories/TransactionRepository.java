@@ -8,6 +8,7 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 
     List<Transaction> findByTransactionReference(String transactionReference);
+    List<Transaction> findByOriginalReference(String originalReference);
     List<Transaction> findByType(Transaction.TransactionType type);
     List<Transaction> findByTransactionReferenceAndType(String transactionReference, Transaction.TransactionType type);
 

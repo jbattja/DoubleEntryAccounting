@@ -4,8 +4,10 @@ public enum EventType {
 
     RECEIVED(ReceivedEvent.class),
     AUTHORISED(AuthorisedEvent.class),
+    REFUSED(RefusedEvent.class),
     PAID(PaidEvent.class),
-    REFUSED(RefusedEvent.class);
+    SETTLEMENT_FAILED(SettlementFailed.class);
+
 
     private final Class<? extends BookingEvent> eventClass;
 
