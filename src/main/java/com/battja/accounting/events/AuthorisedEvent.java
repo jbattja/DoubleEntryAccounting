@@ -21,7 +21,7 @@ public class AuthorisedEvent extends BookingEvent {
 
     @Override
     public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
-        Transaction payment = transactions.iterator().next(); // already validated
+        Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT, transactions);
         addBooking(payment.getAcquirerAccount(), RegisterType.RECEIVED, getCreditAmount(payment), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getCreditAmount(payment), payment);

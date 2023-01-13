@@ -26,7 +26,7 @@ public class TransactionService {
     private short counter = 0;
 
     @Value("${system.transactionprefix}")
-    private String transactionPrefix;
+    String transactionPrefix;
 
     @Transactional
     public Transaction newPayment(@NonNull Amount amount, @NonNull Account merchantAccount, @NonNull Account acquirerAccount) {
@@ -158,7 +158,7 @@ public class TransactionService {
             log.warn("Cannot authorize payment: type is: " + transaction.getType());
             throw new BookingException("Cannot authorize payment: invalid payment");
         }
-        Journal journal = null;
+        Journal journal;
         if (authorisedSuccess) {
             journal = bookingService.book(transaction, EventType.AUTHORISED);
         } else {

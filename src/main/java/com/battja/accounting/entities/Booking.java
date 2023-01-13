@@ -30,7 +30,7 @@ public class Booking {
     protected Booking() {}
 
     public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull String currency,
-                   @NonNull Batch batch, Transaction transaction) {
+                   Batch batch, Transaction transaction) {
         this.account = account;
         this.register = register;
         this.amount = amount;

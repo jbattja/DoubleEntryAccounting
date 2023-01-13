@@ -113,14 +113,6 @@ public class BatchService {
         return true;
     }
 
-    public boolean canBatchClose(@NonNull Integer batchId) {
-        Batch batch = batchRepository.findById(batchId).orElse(null);
-        if (batch == null) {
-            return false;
-        }
-        return canBatchClose(batch);
-    }
-
     public boolean canBatchClose(@NonNull Batch batch) {
         if (batch.getCloseDate() != null) {
             return false;

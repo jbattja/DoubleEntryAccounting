@@ -31,21 +31,35 @@ public class Journal {
                 id, eventType, date);
     }
 
-
     public Integer getId() {
         return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getEventType() {
         return eventType;
     }
 
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
     public Date getDate() {
         return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     public List<Booking> getBookings() {
         return bookings;
     }
 
+    public void setBookings(List<Booking> bookings) {
+        this.bookings = bookings;
+    }
 }

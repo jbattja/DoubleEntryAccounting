@@ -12,7 +12,7 @@ import java.util.Set;
 
 public abstract class BookingEvent {
 
-    private List<Booking> bookings;
+    private final List<Booking> bookings;
 
     public List<Booking> getBookings() {
         return bookings;
@@ -46,12 +46,12 @@ public abstract class BookingEvent {
         for (Transaction transaction : transactions) {
             transaction.setStatus(this.getEventTypeName());
         }
-    };
+    }
 
     protected abstract void bookInternal(@NonNull Set <Transaction> transactions) throws BookingException;
 
-    protected boolean addBooking(@NonNull Account account, @NonNull RegisterType register, @NonNull Amount amount, Transaction transaction) throws BookingException {
-        return bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), null, transaction));
+    protected void addBooking(@NonNull Account account, @NonNull RegisterType register, @NonNull Amount amount, Transaction transaction) {
+        bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), null, transaction));
     }
 
     protected Amount getCreditAmount(Transaction transaction) {
