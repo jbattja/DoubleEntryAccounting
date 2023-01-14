@@ -7,6 +7,7 @@ import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.journals.Amount;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
 import com.vaadin.flow.component.button.Button;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 
 @Route(value="payment-details", layout = MainLayout.class)
 @PageTitle("BattjaPay | Payment Details")
@@ -66,10 +68,16 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
                 add(new H4("Capture / Refunds"));
                 add(modificationsGrid);
             }
-            add(new H4("Journals"));
-            add(createJournalsGrid());
-            add(new H4("Bookings"));
-            add(createBookingGrid());
+            Set<Journal> journals = transactionService.getJournalsByTransaction(payment);
+            if (!journals.isEmpty()) {
+                add(new H4("Journals"));
+                add(GridCreator.createJournalGrid(journals));
+            }
+            List<Booking> bookings = transactionService.getBookingsByTransaction(payment);
+            if (!bookings.isEmpty()) {
+                add(new H4("Bookings"));
+                add(GridCreator.createBookingGrid(bookings));
+            }
         }
     }
 
@@ -78,8 +86,10 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         detailsForm.addField("Reference", payment.getTransactionReference());
         detailsForm.addField("Amount", payment.getCurrency() + " " + payment.getAmount());
         detailsForm.addField("Status", payment.getStatus());
-        detailsForm.addField("Merchant", payment.getMerchantAccount().getAccountName());
-        detailsForm.addField("Acquirer account", payment.getAcquirerAccount().getAccountName());
+        detailsForm.addClickableField("Merchant", payment.getMerchantAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(payment.getMerchantAccount().getId()));
+        detailsForm.addClickableField("Acquirer account", payment.getAcquirerAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(payment.getAcquirerAccount().getId()));
         return detailsForm;
     }
 
@@ -178,21 +188,10 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         journalGrid.addColumn(Journal::getDate).setHeader("Date");
         journalGrid.addColumn(Journal::getEventType).setHeader("Event");
         journalGrid.setAllRowsVisible(true);
+        journalGrid.addItemClickListener(journalItemClickEvent -> journalGrid.getUI().ifPresent(
+                ui -> ui.navigate(JournalDetailsView.class,String.valueOf(journalItemClickEvent.getItem().getId()))
+        ));
         return journalGrid;
-    }
-
-    private Grid<Booking> createBookingGrid() {
-        Grid<Booking> bookingGrid = new Grid<>(Booking.class);
-        bookingGrid.removeAllColumns();
-        bookingGrid.setItems(transactionService.getBookingsByTransaction(payment));
-        bookingGrid.addColumn(booking -> booking.getAccount().getAccountName()).setHeader("Account");
-        bookingGrid.addColumn(Booking::getRegister).setHeader("Register");
-        bookingGrid.addColumn(Booking::getCurrency).setHeader("Currency");
-        bookingGrid.addColumn(booking -> booking.getAmount() < 0 ? booking.getAmount() * -1 : "").setHeader("Debit Amount");
-        bookingGrid.addColumn(booking -> booking.getAmount() >= 0 ? booking.getAmount() : "").setHeader("Credit Amount");
-        bookingGrid.addColumn(booking -> booking.getBatch().getBatchNumber()).setHeader("BatchNumber");
-        bookingGrid.setAllRowsVisible(true);
-        return bookingGrid;
     }
 
 }

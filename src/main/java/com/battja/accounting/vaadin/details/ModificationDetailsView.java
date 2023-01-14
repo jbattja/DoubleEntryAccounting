@@ -6,11 +6,11 @@ import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.icon.Icon;
@@ -23,6 +23,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 @Route(value="modification-details", layout = MainLayout.class)
 @PageTitle("BattjaPay | Modification Details")
@@ -57,10 +59,16 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
             add(createBackButton());
             add(createDetailsForm());
             add(createButtonsLayout());
-            add(new H4("Journals"));
-            add(createJournalsGrid());
-            add(new H4("Bookings"));
-            add(createBookingGrid());
+            Collection<Journal> journals = transactionService.getJournalsByTransaction(modification);
+            if (!journals.isEmpty()) {
+                add(new H4("Journals"));
+                add(GridCreator.createJournalGrid(journals));
+            }
+            Collection<Booking> bookingList = transactionService.getBookingsByTransaction(modification);
+            if (!bookingList.isEmpty()) {
+                add(new H4("Bookings"));
+                add(GridCreator.createBookingGrid(bookingList));
+            }
         }
     }
 
@@ -91,8 +99,10 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
         detailsForm.addField("Payment Reference", modification.getTransactionReference());
         detailsForm.addField("Amount", modification.getCurrency() + " " + modification.getAmount());
         detailsForm.addField("Status", modification.getStatus());
-        detailsForm.addField("Merchant", modification.getMerchantAccount().getAccountName());
-        detailsForm.addField("Acquirer account", modification.getAcquirerAccount().getAccountName());
+        detailsForm.addClickableField("Merchant", modification.getMerchantAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(modification.getMerchantAccount().getId()));
+        detailsForm.addClickableField("Acquirer account", modification.getAcquirerAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(modification.getAcquirerAccount().getId()));
         return detailsForm;
     }
 
@@ -120,31 +130,5 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
         notification.open();
         updateView();
     }
-
-    private Grid<Journal> createJournalsGrid() {
-        Grid<Journal> journalGrid = new Grid<>(Journal.class);
-        journalGrid.removeAllColumns();
-        journalGrid.setItems(transactionService.getJournalsByTransaction(modification));
-        journalGrid.addColumn(Journal::getDate).setHeader("Date");
-        journalGrid.addColumn(Journal::getEventType).setHeader("Event");
-        journalGrid.setAllRowsVisible(true);
-        return journalGrid;
-    }
-
-    private Grid<Booking> createBookingGrid() {
-        Grid<Booking> bookingGrid = new Grid<>(Booking.class);
-        bookingGrid.removeAllColumns();
-        bookingGrid.setItems(transactionService.getBookingsByTransaction(modification));
-        bookingGrid.addColumn(booking -> booking.getAccount().getAccountName()).setHeader("Account");
-        bookingGrid.addColumn(Booking::getRegister).setHeader("Register");
-        bookingGrid.addColumn(Booking::getCurrency).setHeader("Currency");
-        bookingGrid.addColumn(booking -> booking.getAmount() < 0 ? booking.getAmount() * -1 : "").setHeader("Debit Amount");
-        bookingGrid.addColumn(booking -> booking.getAmount() >= 0 ? booking.getAmount() : "").setHeader("Credit Amount");
-        bookingGrid.addColumn(booking -> booking.getBatch().getBatchNumber()).setHeader("BatchNumber");
-        bookingGrid.setAllRowsVisible(true);
-        return bookingGrid;
-    }
-
-
 
 }

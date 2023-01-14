@@ -12,9 +12,6 @@ import java.util.Optional;
 public interface BatchRepository extends JpaRepository<Batch,Integer> {
 
     List<Batch> findByAccountAndRegisterAndStatus(Account account, RegisterType register, Batch.BatchStatus status);
-
-    List<Booking> findBookingsById(Integer Id);
-
     Optional<Batch> findFirstByAccountAndRegisterOrderByBatchNumberDesc(Account account, RegisterType register);
 
 }
