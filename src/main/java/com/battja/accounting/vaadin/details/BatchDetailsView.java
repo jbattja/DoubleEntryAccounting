@@ -4,11 +4,11 @@ import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.services.BatchService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.notification.Notification;
@@ -25,8 +25,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="batch-details", layout = MainLayout.class)
-@PageTitle("BattjaPay | Batch Details")
+@PageTitle(BRAND_NAME + " | Batch Details")
 public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     final static Logger log = LoggerFactory.getLogger(BatchDetailsView.class);
@@ -68,13 +70,13 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
             form.addField("Close Date",batch.getCloseDate() != null ? batch.getCloseDate().toString() : "");
 
             add(form);
-            Grid<BatchEntry> grid = createBatchEntryGrid();
+            batchEntryList = batchService.getEntries(batch.getId());
             if (batchEntryList != null) {
                 add(new H4("Summary"));
                 add(createSummaryForm());
                 add(createButtonsLayout());
                 add(new H4("Entries"));
-                add(grid);
+                add(GridCreator.createBatchEntryGrid(batchEntryList));
             }
         }
     }
@@ -99,20 +101,6 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
         }
         summaryForm.addField("Open / Closed",openItems +  "/" + batchEntryList.size());
         return summaryForm;
-    }
-
-    private Grid<BatchEntry> createBatchEntryGrid() {
-        Grid<BatchEntry> batchEntryGrid = new Grid<>(BatchEntry.class);
-        if (batch != null) {
-            batchEntryList = batchService.getEntries(batch.getId());
-            batchEntryGrid.removeAllColumns();
-            batchEntryGrid.setItems(batchEntryList);
-            batchEntryGrid.addColumn(batchEntry -> batchEntry.getTransaction().getTransactionReference()).setHeader("Transaction");
-            batchEntryGrid.addColumn(BatchEntry::getCurrency).setHeader("Currency");
-            batchEntryGrid.addColumn(BatchEntry::getOriginalAmount).setHeader("Original amount");
-            batchEntryGrid.addColumn(BatchEntry::getOpenAmount).setHeader("Open amount");
-        }
-        return batchEntryGrid;
     }
 
     private HorizontalLayout createButtonsLayout() {

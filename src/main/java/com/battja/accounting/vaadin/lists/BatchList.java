@@ -12,8 +12,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="batches", layout = MainLayout.class)
-@PageTitle("BattjaPay | Batches")
+@PageTitle(BRAND_NAME + " | Batches")
 public class BatchList extends VerticalLayout {
 
     private final BatchRepository repository;

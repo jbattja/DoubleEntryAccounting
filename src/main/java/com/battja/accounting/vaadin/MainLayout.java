@@ -14,6 +14,8 @@ import com.vaadin.flow.router.RouterLink;
 
 public class MainLayout extends AppLayout {
 
+    public final static String BRAND_NAME = "BattjaBook";
+
     public MainLayout() {
         createHeader();
         createDrawer();
@@ -21,7 +23,7 @@ public class MainLayout extends AppLayout {
 
 
     private void createHeader() {
-        H1 logo = new H1("BattjaPay");
+        H1 logo = new H1(BRAND_NAME);
         logo.addClassNames("text-l", "m-m");
 
         HorizontalLayout header = new HorizontalLayout(
@@ -37,6 +39,9 @@ public class MainLayout extends AppLayout {
     }
 
     private void createDrawer() {
+        RouterLink home = new RouterLink("Home", HomeView.class);
+        home.setHighlightCondition(HighlightConditions.sameLocation());
+        addToDrawer(new VerticalLayout(home));
         RouterLink accountList = new RouterLink("Accounts", AccountList.class);
         accountList.setHighlightCondition(HighlightConditions.sameLocation());
         addToDrawer(new VerticalLayout(accountList));

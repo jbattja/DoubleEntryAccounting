@@ -26,8 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="modification-details", layout = MainLayout.class)
-@PageTitle("BattjaPay | Modification Details")
+@PageTitle(BRAND_NAME + " | Modification Details")
 public class ModificationDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     final static Logger log = LoggerFactory.getLogger(ModificationDetailsView.class);

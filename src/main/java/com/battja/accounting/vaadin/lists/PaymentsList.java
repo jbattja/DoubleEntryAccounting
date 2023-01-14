@@ -15,8 +15,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="payments", layout = MainLayout.class)
-@PageTitle("BattjaPay | Payments")
+@PageTitle(BRAND_NAME + " | Payments")
 public class PaymentsList extends VerticalLayout {
 
     private final TransactionService transactionService;

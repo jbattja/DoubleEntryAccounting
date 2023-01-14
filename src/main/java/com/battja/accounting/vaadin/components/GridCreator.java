@@ -1,10 +1,7 @@
 package com.battja.accounting.vaadin.components;
 
-import com.battja.accounting.entities.Account;
-import com.battja.accounting.entities.Booking;
-import com.battja.accounting.entities.Journal;
-import com.battja.accounting.vaadin.details.AccountDetailsView;
-import com.battja.accounting.vaadin.details.JournalDetailsView;
+import com.battja.accounting.entities.*;
+import com.battja.accounting.vaadin.details.*;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -24,6 +21,10 @@ public class GridCreator {
         bookingGrid.addColumn(booking -> booking.getAmount() >= 0 ? booking.getAmount() : "").setHeader("Credit Amount");
         bookingGrid.addColumn(booking -> booking.getBatch().getBatchNumber()).setHeader("BatchNumber");
         bookingGrid.setAllRowsVisible(true);
+        bookingGrid.addItemClickListener(journalItemClickEvent -> bookingGrid.getUI().ifPresent(
+                ui -> ui.navigate(BatchDetailsView.class,String.valueOf(journalItemClickEvent.getItem().getBatch().getId()))
+        ));
+
         return bookingGrid;
     }
 
@@ -39,6 +40,22 @@ public class GridCreator {
         ));
         return journalGrid;
     }
+
+    public static Grid<BatchEntry> createBatchEntryGrid(Collection<BatchEntry> batchEntries) {
+        Grid<BatchEntry> batchEntryGrid = new Grid<>(BatchEntry.class);
+        batchEntryGrid.removeAllColumns();
+        batchEntryGrid.setItems(batchEntries);
+        batchEntryGrid.addColumn(batchEntry -> batchEntry.getTransaction().getTransactionReference()).setHeader("Transaction");
+        batchEntryGrid.addColumn(BatchEntry::getCurrency).setHeader("Currency");
+        batchEntryGrid.addColumn(BatchEntry::getOriginalAmount).setHeader("Original amount");
+        batchEntryGrid.addColumn(BatchEntry::getOpenAmount).setHeader("Open amount");
+        batchEntryGrid.addItemClickListener(batchEntryItemClickEvent -> batchEntryGrid.getUI().ifPresent(
+                ui -> ui.navigate(batchEntryItemClickEvent.getItem().getTransaction().getType().equals(Transaction.TransactionType.PAYMENT) ? PaymentDetailsView.class : ModificationDetailsView.class,
+                        String.valueOf(batchEntryItemClickEvent.getItem().getTransaction().getId()))
+        ));
+        return batchEntryGrid;
+    }
+
 
     public static Grid<Account> createAccountGrid(Collection<Account> accounts) {
         Grid<Account> accountGrid = new Grid<>(Account.class);

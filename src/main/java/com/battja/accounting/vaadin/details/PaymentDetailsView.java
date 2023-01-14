@@ -30,8 +30,10 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="payment-details", layout = MainLayout.class)
-@PageTitle("BattjaPay | Payment Details")
+@PageTitle(BRAND_NAME + " | Payment Details")
 public class PaymentDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     final static Logger log = LoggerFactory.getLogger(PaymentDetailsView.class);

@@ -17,8 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="account-details", layout = MainLayout.class)
-@PageTitle("BattjaPay | Account Details")
+@PageTitle(BRAND_NAME + " | Account Details")
 public class AccountDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     final static Logger log = LoggerFactory.getLogger(AccountDetailsView.class);

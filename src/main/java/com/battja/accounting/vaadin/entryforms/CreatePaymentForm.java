@@ -18,8 +18,10 @@ import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import static com.battja.accounting.vaadin.MainLayout.BRAND_NAME;
+
 @Route(value="create-payment", layout = MainLayout.class)
-@PageTitle("BattjaPay | Create Payment")
+@PageTitle(BRAND_NAME + " | Create Payment")
 public class CreatePaymentForm extends VerticalLayout {
 
     private final TransactionService transactionService;
