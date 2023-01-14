@@ -2,7 +2,7 @@ package com.battja.accounting.vaadin.entryforms;
 
 import com.battja.accounting.entities.Account;
 import com.battja.accounting.entities.Transaction;
-import com.battja.accounting.journals.Amount;
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;

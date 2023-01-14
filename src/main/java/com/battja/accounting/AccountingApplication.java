@@ -1,6 +1,6 @@
 package com.battja.accounting;
 
-import com.battja.accounting.accounts.InitialSetup;
+import com.battja.accounting.setup.InitialSetup;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,9 +17,7 @@ public class AccountingApplication {
 
 	@Bean
 	public CommandLineRunner demo(InitialSetup initialSetup) {
-		return(args) -> {
-			initialSetup.init();
-		};
+		return(args) -> initialSetup.init();
 
 	}
 

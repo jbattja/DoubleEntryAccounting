@@ -1,6 +1,5 @@
 package com.battja.accounting.entities;
 
-import com.battja.accounting.journals.Amount;
 import jakarta.persistence.*;
 
 import java.util.Set;

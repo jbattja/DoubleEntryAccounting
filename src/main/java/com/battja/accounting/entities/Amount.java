@@ -1,4 +1,4 @@
-package com.battja.accounting.journals;
+package com.battja.accounting.entities;
 
 public class Amount {
 

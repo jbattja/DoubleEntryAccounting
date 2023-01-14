@@ -2,8 +2,8 @@ package com.battja.accounting.events;
 
 import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.journals.Amount;
-import com.battja.accounting.journals.RegisterType;
+import com.battja.accounting.entities.Amount;
+import com.battja.accounting.entities.RegisterType;
 import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;

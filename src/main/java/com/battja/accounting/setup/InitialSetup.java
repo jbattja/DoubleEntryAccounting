@@ -1,10 +1,10 @@
-package com.battja.accounting.accounts;
+package com.battja.accounting.setup;
 
 import com.battja.accounting.entities.Account;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.DuplicateNameException;
-import com.battja.accounting.journals.Amount;
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.BookingService;
 import com.battja.accounting.services.TransactionService;

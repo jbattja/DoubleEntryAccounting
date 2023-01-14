@@ -2,8 +2,7 @@ package com.battja.accounting.repositories;
 
 import com.battja.accounting.entities.Account;
 import com.battja.accounting.entities.Batch;
-import com.battja.accounting.entities.Booking;
-import com.battja.accounting.journals.RegisterType;
+import com.battja.accounting.entities.RegisterType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

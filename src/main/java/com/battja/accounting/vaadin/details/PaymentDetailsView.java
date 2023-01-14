@@ -4,7 +4,7 @@ import com.battja.accounting.entities.Booking;
 import com.battja.accounting.entities.Journal;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.journals.Amount;
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;

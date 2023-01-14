@@ -4,7 +4,7 @@ import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.entities.Journal;
 import com.battja.accounting.exceptions.BatchClosedException;
-import com.battja.accounting.journals.Amount;
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.repositories.BatchEntryRepository;
 import com.battja.accounting.repositories.BatchRepository;
 import com.battja.accounting.entities.Booking;
@@ -150,17 +150,18 @@ public class BatchService {
             log.warn("No batch found with id " + batchId);
             return false;
         }
-        if (!canBatchClose(batch)) {
+        if (canBatchClose(batch)) {
+            if (batch.getEndDate() == null) {
+                batch.setEndDate(new Date());
+            }
+            batch.setCloseDate(new Date());
+            batch.setStatus(Batch.BatchStatus.CLOSED);
+            batchRepository.save(batch);
+            return true;
+        } else {
             log.warn("Cannot close batch " + batch.getId());
             return false;
         }
-        if (batch.getEndDate() == null) {
-            batch.setEndDate(new Date());
-        }
-        batch.setCloseDate(new Date());
-        batch.setStatus(Batch.BatchStatus.CLOSED);
-        batchRepository.save(batch);
-        return true;
     }
 
     @Autowired

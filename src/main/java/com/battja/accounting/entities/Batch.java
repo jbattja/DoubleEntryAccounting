@@ -1,6 +1,5 @@
 package com.battja.accounting.entities;
 
-import com.battja.accounting.journals.RegisterType;
 import com.battja.accounting.util.CommonUtil;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
