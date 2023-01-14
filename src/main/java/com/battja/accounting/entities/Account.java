@@ -20,6 +20,10 @@ public class Account {
         public String toString() {
             return CommonUtil.enumNameToString(this.name());
         }
+
+        public AccountType getParent() {
+            return parent;
+        }
     }
 
     @Id

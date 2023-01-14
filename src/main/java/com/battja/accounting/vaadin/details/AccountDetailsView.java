@@ -5,6 +5,9 @@ import com.battja.accounting.services.AccountService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.ReadOnlyForm;
+import com.battja.accounting.vaadin.entryforms.CreateAccountForm;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -53,6 +56,13 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
             if (!children.isEmpty()) {
                 add(new H4("Child Accounts"));
                 add(GridCreator.createAccountGrid(children));
+            }
+            if (!(account.getAccountType().equals(Account.AccountType.MERCHANT) || account.getAccountType().equals(Account.AccountType.ACQUIRER_ACCOUNT))) {
+                Button createAccountButton = new Button("Create Child Account");
+                createAccountButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+                createAccountButton.addClickListener(buttonClickEvent -> createAccountButton.getUI().ifPresent(
+                        ui -> ui.navigate(CreateAccountForm.class,String.valueOf(account.getId()))));
+                add(createAccountButton);
             }
         }
     }

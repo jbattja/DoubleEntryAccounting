@@ -6,6 +6,7 @@ import com.battja.accounting.journals.Amount;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
 import com.battja.accounting.vaadin.details.PaymentDetailsView;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -50,11 +51,13 @@ public class CreatePaymentForm extends VerticalLayout {
         FormLayout layout = new FormLayout();
 
         merchant = new Select<>();
+        merchant.setLabel("Merchant Account");
         merchant.setItems(accountService.listMerchants());
         merchant.setRenderer(new TextRenderer<>(Account::getAccountName));
         layout.add(merchant);
 
         acquirerAccount = new Select<>();
+        acquirerAccount.setLabel("Acquirer Account");
         acquirerAccount.setItems(accountService.listAcquirerAccounts());
         acquirerAccount.setRenderer(new TextRenderer<>(Account::getAccountName));
         layout.add(acquirerAccount);
@@ -101,9 +104,14 @@ public class CreatePaymentForm extends VerticalLayout {
             merchant.focus();
             return;
         }
-        Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(),amount.getValue()),merchant.getValue(),acquirerAccount.getValue());
-        if (transaction != null) {
-            getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class,String.valueOf(transaction.getId())));
+        try {
+            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()), merchant.getValue(), acquirerAccount.getValue());
+            if (transaction != null) {
+                getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class, String.valueOf(transaction.getId())));
+            }
+        } catch (IllegalArgumentException e) {
+            NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);
+            notification.open();
         }
     }
 }

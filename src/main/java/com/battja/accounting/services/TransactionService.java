@@ -31,10 +31,12 @@ public class TransactionService {
     @Transactional
     public Transaction newPayment(@NonNull Amount amount, @NonNull Account merchantAccount, @NonNull Account acquirerAccount) {
         if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
-            throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount);
+            log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
+            throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
         }
         if (!acquirerAccount.getAccountType().equals(Account.AccountType.ACQUIRER_ACCOUNT)) {
-            throw new IllegalArgumentException("Not a valid acquirer account: " + acquirerAccount);
+            log.warn("Failed to create Payment: not a valid acquirer account: " + acquirerAccount);
+            throw new IllegalArgumentException("Not a valid acquirer account: " + acquirerAccount.getAccountName());
         }
         Transaction transaction = new Transaction();
         transaction.setMerchantAccount(merchantAccount);
@@ -43,9 +45,9 @@ public class TransactionService {
         transaction.setCurrency(amount.getCurrency());
         transaction.setType(Transaction.TransactionType.PAYMENT);
         transaction.setTransactionReference(createTransactionReference());
-        log.info("Storing transaction: " + transaction);
         transaction = transactionRepository.save(transaction);
         bookingService.book(transaction, EventType.RECEIVED);
+        log.info("Created transaction: " + transaction);
         return transaction;
     }
 
@@ -166,6 +168,24 @@ public class TransactionService {
         }
         if (journal == null) {
             throw new BookingException("Failed to authorize payment");
+        }
+    }
+
+    public void cancelRemainingAmount(@NonNull Transaction transaction) throws BookingException {
+        transaction = transactionRepository.findById(transaction.getId()).orElse(null);
+        if (transaction == null) {
+            log.warn("Cannot cancel payment: payment is null");
+            throw new BookingException("Cannot cancel payment: invalid payment");
+        }
+        if (transaction.getType() != Transaction.TransactionType.PAYMENT) {
+            log.warn("Cannot cancel payment: type is: " + transaction.getType());
+            throw new BookingException("Cannot cancel payment: invalid payment");
+        }
+        long amount = getRemainingBalance(RegisterType.AUTHORISED,transaction);
+        transaction.setAmount(amount);
+        Journal journal = bookingService.book(transaction, EventType.CANCELLED);
+        if (journal == null) {
+            throw new BookingException("Failed to cancel payment");
         }
     }
 

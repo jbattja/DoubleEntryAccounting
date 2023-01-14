@@ -6,6 +6,7 @@ public enum EventType {
     AUTHORISED(AuthorisedEvent.class),
     REFUSED(RefusedEvent.class),
     PAID(PaidEvent.class),
+    CANCELLED(CancelEvent.class),
     SETTLEMENT_FAILED(SettlementFailed.class);
 
 

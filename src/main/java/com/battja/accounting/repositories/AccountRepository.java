@@ -10,6 +10,7 @@ public interface AccountRepository extends JpaRepository<Account,Integer> {
 
     List<Account> findByAccountName(String accountName);
     List<Account> findByAccountType(Account.AccountType accountType);
+    List<Account> findByAccountTypeIn(List<Account.AccountType> accountTypes);
     List<Account> findByParent(Account parent);
 
 }

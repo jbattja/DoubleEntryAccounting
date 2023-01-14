@@ -124,4 +124,94 @@ public class GridCreator {
         return "";
     }
 
+    public static Grid<Transaction> createPaymentsGrid(Collection<Transaction> payments) {
+        Grid<Transaction> grid = new Grid<>(Transaction.class);
+        GridListDataView<Transaction> dataView = grid.setItems(payments);
+        grid.removeAllColumns();
+        Grid.Column<Transaction> merchantColumn = grid.addColumn(transaction -> transaction.getMerchantAccount().getAccountName()).setHeader("Merchant");
+        Grid.Column<Transaction> referenceColumn = grid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
+        Grid.Column<Transaction> statusColumn =  grid.addColumn(Transaction::getStatus).setHeader("Status");
+        Grid.Column<Transaction> currencyColumn = grid.addColumn(Transaction::getCurrency).setHeader("Currency");
+        Grid.Column<Transaction> amountColumn = grid.addColumn(Transaction::getAmount).setHeader("Amount");
+        Grid.Column<Transaction> acquirerAccountColumn = grid.addColumn(transaction -> transaction.getAcquirerAccount().getAccountName()).setHeader("Acquirer Account");
+
+        TransactionFilter transactionFilter = new TransactionFilter(dataView);
+        grid.getHeaderRows().clear();
+        HeaderRow headerRow = grid.appendHeaderRow();
+        headerRow.getCell(merchantColumn).setComponent(new FilterHeader(transactionFilter::setMerchant));
+        headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
+        headerRow.getCell(statusColumn).setComponent(new FilterHeader(transactionFilter::setStatus));
+        headerRow.getCell(currencyColumn).setComponent(new FilterHeader(transactionFilter::setCurrency));
+        headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
+        headerRow.getCell(acquirerAccountColumn).setComponent(new FilterHeader(transactionFilter::setAcquirerAccount));
+
+        grid.addItemClickListener(transactionItemClickEvent -> grid.getUI().ifPresent(
+                ui -> ui.navigate(PaymentDetailsView.class,String.valueOf(transactionItemClickEvent.getItem().getId()))
+        ));
+        return grid;
+    }
+
+    public static class TransactionFilter {
+        private final GridListDataView<Transaction> dataView;
+
+        private String merchant;
+        private String reference;
+        private String status;
+        private String currency;
+        private String amount;
+        private String acquirerAccount;
+
+        public TransactionFilter(GridListDataView<Transaction> dataView) {
+            this.dataView = dataView;
+            this.dataView.setFilter(this::test);
+        }
+
+        public void setMerchant(String merchant) {
+            this.merchant = merchant;
+            this.dataView.refreshAll();
+        }
+
+        public void setReference(String reference) {
+            this.reference = reference;
+            this.dataView.refreshAll();
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+            this.dataView.refreshAll();
+        }
+
+        public void setCurrency(String currency) {
+            this.currency = currency;
+            this.dataView.refreshAll();
+        }
+
+        public void setAmount(String amount) {
+            this.amount = amount;
+            this.dataView.refreshAll();
+        }
+
+        public void setAcquirerAccount(String acquirerAccount) {
+            this.acquirerAccount = acquirerAccount;
+            this.dataView.refreshAll();
+        }
+
+        public boolean test(Transaction transaction) {
+            return (
+                    matches(transaction.getMerchantAccount().getAccountName(), merchant)
+                            && matches(transaction.getTransactionReference(), reference)
+                            && matches(transaction.getStatus(), status)
+                            && matches((transaction.getCurrency()),currency)
+                            && matches((transaction.getAmount().toString()),amount)
+                            && matches((transaction.getAcquirerAccount().getAccountName()),acquirerAccount)
+            );
+        }
+
+        private boolean matches(String value, String searchTerm) {
+            return searchTerm == null || searchTerm.isEmpty()
+                    || value.toLowerCase().contains(searchTerm.toLowerCase());
+        }
+
+    }
+
 }

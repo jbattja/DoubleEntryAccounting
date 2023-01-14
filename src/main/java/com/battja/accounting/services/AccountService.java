@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -40,13 +41,24 @@ public class AccountService {
         return accountRepository.findByParent(parent);
     }
 
-
     public List<Account> listMerchants() {
         return accountRepository.findByAccountType(Account.AccountType.MERCHANT);
     }
 
     public List<Account> listAcquirerAccounts() {
         return accountRepository.findByAccountType(Account.AccountType.ACQUIRER_ACCOUNT);
+    }
+
+    public List<Account> listAvailableParentAccounts(Account.AccountType type) {
+        List<Account.AccountType> accountTypes = new ArrayList<>();
+        if (type == null) {
+            accountTypes.add(Account.AccountType.PSP);
+            accountTypes.add(Account.AccountType.COMPANY);
+            accountTypes.add(Account.AccountType.ACQUIRER);
+        } else {
+            accountTypes.add(type.getParent());
+        }
+        return accountRepository.findByAccountTypeIn(accountTypes);
     }
 
     @Transactional
@@ -59,7 +71,9 @@ public class AccountService {
             log.warn("Account with name " + account.getAccountName() + " already exists");
             throw new DuplicateNameException("Account with name " + account.getAccountName() + " already exists");
         }
-        return accountRepository.save(account);
+        account = accountRepository.save(account);
+        log.info("Created account:" + account);
+        return account;
     }
 
     @Autowired

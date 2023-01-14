@@ -125,6 +125,14 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
             captureDiv.add(captureAmount);
         }
         buttonsLayout.add(captureDiv);
+        Button cancelButton = new Button("Cancel Remaining Amount");
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        cancelButton.addClickListener(buttonClickEvent -> cancelPayment());
+        if (!transactionService.canTransactionCapture(payment)) {
+            cancelButton.setEnabled(false);
+        }
+        buttonsLayout.add(cancelButton);
+
         return buttonsLayout;
     }
     private void authorizePayment(boolean authoriseSuccess) {
@@ -153,11 +161,31 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
             return;
         }
         try {
-            transactionService.newCapture(payment, new Amount(payment.getCurrency(), captureAmount.getValue()));
+            Transaction capture = transactionService.newCapture(payment, new Amount(payment.getCurrency(), captureAmount.getValue()));
+            NotificationWithCloseButton notification;
+            if (capture == null) {
+                notification = new NotificationWithCloseButton("Failed to capture payment", false);
+            } else {
+                notification = new NotificationWithCloseButton("Successfully captured payment", true);
+            }
+            notification.open();
         } catch (BookingException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);
             notification.open();
         }
+        updateView();
+    }
+
+    private void cancelPayment() {
+        try {
+            transactionService.cancelRemainingAmount(payment);
+        } catch (BookingException e) {
+            NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(), false);
+            notification.open();
+            return;
+        }
+        NotificationWithCloseButton notification = new NotificationWithCloseButton("Payment cancelled", true);
+        notification.open();
         updateView();
     }
 

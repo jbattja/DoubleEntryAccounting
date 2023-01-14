@@ -6,5 +6,5 @@ Application itself is a backend written in Java Spring which does the bookings a
 To run: 
 - Create a (mysql) database locally and update details in application.properties.
 - Have maven download all required resources. 
-- On first run, make sure to run initialSetup.init(); to create initial database entries, by uncommenting it in the AccountingApplication.Java. Remove it again for next runs. 
+- On the first run, all db tables will be created with some demo values. If a db reset is needed, just drop all tables, which re-triggers this process.
 - Vaadin will launch on localhost:8080 for the UI. 
