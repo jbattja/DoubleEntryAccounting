@@ -28,7 +28,9 @@ public class Account {
     private String accountName;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
-    private Integer parentId;
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Account parent;
 
     protected Account() {}
 
@@ -36,7 +38,8 @@ public class Account {
         this.accountName = accountName;
         this.accountType = accountType;
         if (this.accountType.parent == AccountType.PSP) {
-            this.parentId = DEFAULT_PSP_ACCOUNT_ID;
+            this.parent = new Account(DEFAULT_PSP_ACCOUNT_NAME,AccountType.PSP);
+            this.parent.id = DEFAULT_PSP_ACCOUNT_ID;
         } else {
             throw new IllegalArgumentException("Account needs to have a parent");
         }
@@ -45,7 +48,7 @@ public class Account {
     public Account(String accountName, AccountType accountType, Account parent) {
         this.accountName = accountName;
         this.accountType = accountType;
-        this.setParentId(parent);
+        this.parent = parent;
     }
 
     public Integer getId() {
@@ -64,28 +67,15 @@ public class Account {
         return accountType;
     }
 
-    public Integer getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Account parent) {
-        if (parent == null && this.accountType == AccountType.PSP) {
-            return;
-        }
-        if (parent == null) {
-            throw new IllegalArgumentException("Account needs to have a parent");
-        }
-        if (parent.accountType != this.accountType.parent) {
-            throw new IllegalArgumentException("Incorrect Account Type");
-        }
-        this.parentId = parent.getId();
+    public Account getParent() {
+        return parent;
     }
 
     @Override
     public String toString() {
         return String.format(
-                "Account[id=%s, accountName='%s', AccountType='%s', parentId='%s']",
-                id, accountName, accountType, parentId);
+                "Account[id=%s, accountName='%s', AccountType='%s']",
+                id, accountName, accountType);
     }
 
 }

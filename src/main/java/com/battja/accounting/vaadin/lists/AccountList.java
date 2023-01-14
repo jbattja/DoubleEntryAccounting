@@ -43,10 +43,8 @@ public class AccountList extends VerticalLayout {
     }
 
     private String getParentAccountName(Account account) {
-        // TODO get parent name from DB in the list instead of doing all these calls
-        Account parent = accountService.getParent(account);
-        if (parent != null) {
-            return parent.getAccountName();
+        if (account.getParent() != null) {
+            return account.getParent().getAccountName();
         }
         return "";
     }

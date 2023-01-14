@@ -45,11 +45,8 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
             ReadOnlyForm form = new ReadOnlyForm();
             form.addField("Name", account.getAccountName());
             form.addField("Type", account.getAccountType().toString());
-            if (account.getParentId() != null) {
-                Account parent = accountService.getParent(account);
-                if (parent != null) {
-                    form.addField("Parent",parent.getAccountName());
-                }
+            if (account.getParent() != null) {
+                form.addField("Parent",account.getParent().getAccountName());
             }
             add(form);
         }

@@ -21,14 +21,6 @@ public class AccountService {
         return accountRepository.findById(accountId).orElse(null);
     }
 
-    public Account getParent(@NonNull Account account) {
-        if (account.getParentId() == null) {
-            return null;
-        }
-        return accountRepository.findById(account.getParentId()).orElse(null);
-    }
-
-
     public Account getAccount(@NonNull String accountName) {
         List<Account> accountList = accountRepository.findByAccountName(accountName);
         if (accountList.isEmpty()) {
