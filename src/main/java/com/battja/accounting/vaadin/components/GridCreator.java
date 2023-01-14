@@ -6,7 +6,10 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class GridCreator {
 
@@ -29,9 +32,11 @@ public class GridCreator {
     }
 
     public static Grid<Journal> createJournalGrid(Collection<Journal> journals) {
+        List<Journal> journalList = new ArrayList<>(journals);
+        Collections.sort(journalList);
         Grid<Journal> journalGrid = new Grid<>(Journal.class);
         journalGrid.removeAllColumns();
-        journalGrid.setItems(journals);
+        journalGrid.setItems(journalList);
         journalGrid.addColumn(Journal::getDate).setHeader("Date");
         journalGrid.addColumn(Journal::getEventType).setHeader("Event");
         journalGrid.setAllRowsVisible(true);

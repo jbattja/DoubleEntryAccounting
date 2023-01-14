@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-public class Journal {
+public class Journal implements Comparable<Journal> {
 
     @Id
     @GeneratedValue
@@ -61,5 +61,10 @@ public class Journal {
 
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
+    }
+
+    @Override
+    public int compareTo(Journal other) {
+        return this.date.compareTo(other.date);
     }
 }
