@@ -49,7 +49,7 @@ public class AccountList extends VerticalLayout {
         return "";
     }
 
-    private static class AccountFilter {
+    public static class AccountFilter {
         private final GridListDataView<Account> dataView;
 
         private String accountName;

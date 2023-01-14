@@ -36,6 +36,11 @@ public class AccountService {
         return accountRepository.findAll();
     }
 
+    public List<Account> listChildren(Account parent) {
+        return accountRepository.findByParent(parent);
+    }
+
+
     public List<Account> listMerchants() {
         return accountRepository.findByAccountType(Account.AccountType.MERCHANT);
     }
