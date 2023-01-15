@@ -42,7 +42,7 @@ public class Account {
         this.accountName = accountName;
         this.accountType = accountType;
         if (this.accountType.parent == AccountType.PSP) {
-            this.parent = new Account(DEFAULT_PSP_ACCOUNT_NAME,AccountType.PSP);
+            this.parent = new Account(DEFAULT_PSP_ACCOUNT_NAME,AccountType.PSP,null);
             this.parent.id = DEFAULT_PSP_ACCOUNT_ID;
         } else {
             throw new IllegalArgumentException("Account needs to have a parent");
