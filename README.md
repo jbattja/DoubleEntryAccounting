@@ -8,3 +8,4 @@ To run:
 - Have maven download all required resources. 
 - On the first run, all db tables will be created with some demo values. If a db reset is needed, just drop all tables, which re-triggers this process.
 - Vaadin will launch on localhost:8080 for the UI. 
+- Once the app is opened for the first time all frontend modules will be downloaded: this might take a couple of minutes.
