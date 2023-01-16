@@ -53,8 +53,7 @@ public class Account {
         this.accountName = accountName;
         this.accountType = accountType;
         if (this.accountType.parent == AccountType.PSP) {
-            this.parent = new Account(DEFAULT_PSP_ACCOUNT_NAME,AccountType.PSP,null);
-            this.parent.id = DEFAULT_PSP_ACCOUNT_ID;
+            this.parent = defaultPspAccount();
         } else {
             throw new IllegalArgumentException("Account needs to have a parent");
         }
@@ -91,6 +90,12 @@ public class Account {
         return String.format(
                 "Account[id=%s, accountName='%s', AccountType='%s']",
                 id, accountName, accountType);
+    }
+
+    public static Account defaultPspAccount() {
+       Account defaultPspAccount = new Account(DEFAULT_PSP_ACCOUNT_NAME,AccountType.PSP,null);
+       defaultPspAccount.id = DEFAULT_PSP_ACCOUNT_ID;
+       return defaultPspAccount;
     }
 
 }

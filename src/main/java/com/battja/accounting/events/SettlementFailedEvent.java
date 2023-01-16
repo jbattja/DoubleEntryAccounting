@@ -7,7 +7,7 @@ import org.springframework.lang.NonNull;
 
 import java.util.Set;
 
-public class SettlementFailed extends BookingEvent {
+public class SettlementFailedEvent extends BookingEvent {
 
     @Override
     public String getEventTypeName() {
@@ -20,8 +20,8 @@ public class SettlementFailed extends BookingEvent {
     }
 
     @Override
-    public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
-        Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE, transactions);
+    public void bookInternal() throws BookingException {
+        Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE);
         addBooking(capture.getMerchantAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
         addBooking(capture.getPartnerAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
     }

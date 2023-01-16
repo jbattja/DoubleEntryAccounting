@@ -189,6 +189,46 @@ public class TransactionService {
         }
     }
 
+    public void bookEarlySettlementToMerchant(@NonNull Transaction capture, Long amount) throws BookingException {
+        capture = transactionRepository.findById(capture.getId()).orElse(null);
+        if (capture == null) {
+            log.warn("Cannot book settlement: capture is null");
+            throw new BookingException("Cannot book settlement: invalid capture");
+        }
+        if (capture.getType() != Transaction.TransactionType.CAPTURE) {
+            log.warn("Cannot book settlement: type is: " + capture.getType());
+            throw new BookingException("Cannot book settlement: invalid capture");
+        }
+        List<Transaction> paymentList = transactionRepository.findByTransactionReference(capture.getOriginalReference());
+        if (paymentList.size() != 1) {
+            log.warn("Expected 1 payment with reference " + capture.getOriginalReference() + ", but found " + paymentList.size());
+            throw new BookingException("Cannot book settlement");
+        }
+        long captureBalance = getRemainingBalance(RegisterType.CAPTURED,capture);
+        if (captureBalance == 0) {
+            log.info("Not able to book settlement, no open amount");
+            throw new BookingException("Not able to book settlement, no open amount");
+        }
+        if (amount != null) {
+            if (amount > captureBalance) {
+                log.info("Not able to book settlement, amount too high. Amount request to settle: " + amount + ". Capture balance " + captureBalance);
+                throw new BookingException("Not able to book capture to settlement, amount too high");
+            }
+        } else {
+            amount = captureBalance;
+        }
+        capture.setAmount(amount); // overriding the amount, so we only settle the remaining amount
+        Set<Transaction> transactionList = new HashSet<>();
+        transactionList.add(paymentList.get(0));
+        transactionList.add(capture);
+        AdditionalInfo additionalInfo = new AdditionalInfo();
+        additionalInfo.setFundingSource(Account.defaultPspAccount());
+        Journal journal = bookingService.book(transactionList, EventType.SETTLED_TO_MERCHANT, additionalInfo);
+        if (journal == null) {
+            throw new BookingException("Failed to book settlement failed");
+        }
+    }
+
     public void bookSettlementFailed(@NonNull Transaction capture) throws BookingException {
         capture = transactionRepository.findById(capture.getId()).orElse(null);
         if (capture == null) {

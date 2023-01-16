@@ -110,25 +110,35 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
 
     private HorizontalLayout createButtonsLayout() {
         HorizontalLayout buttonsLayout = new HorizontalLayout();
+        Button settleButton = new Button("Book Settlement");
+        settleButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        settleButton.addClickListener(buttonClickEvent -> bookSettlement(true));
         Button captureFailButton = new Button("Book Settlement Failed");
         captureFailButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        captureFailButton.addClickListener(buttonClickEvent -> failCapture());
+        captureFailButton.addClickListener(buttonClickEvent -> bookSettlement(false));
         if (!transactionService.isCaptureStillOpen(modification)) {
+            settleButton.setEnabled(false);
             captureFailButton.setEnabled(false);
         }
+        buttonsLayout.add(settleButton);
         buttonsLayout.add(captureFailButton);
         return buttonsLayout;
     }
 
-    private void failCapture() {
+    private void bookSettlement(boolean success) {
         try {
-            transactionService.bookSettlementFailed(modification);
+            if (success) {
+                transactionService.bookEarlySettlementToMerchant(modification, null);
+            } else {
+                transactionService.bookSettlementFailed(modification);
+            }
         } catch (BookingException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(), false);
             notification.open();
             return;
         }
-        NotificationWithCloseButton notification = new NotificationWithCloseButton("Booked Settlement Failed", true);
+        NotificationWithCloseButton notification = new NotificationWithCloseButton(
+                success?"Booked Settlement":"Booked Settlement Failed", true);
         notification.open();
         updateView();
     }

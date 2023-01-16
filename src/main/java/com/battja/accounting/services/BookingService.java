@@ -1,5 +1,6 @@
 package com.battja.accounting.services;
 
+import com.battja.accounting.entities.AdditionalInfo;
 import com.battja.accounting.entities.Booking;
 import com.battja.accounting.entities.Journal;
 import com.battja.accounting.entities.Transaction;
@@ -29,11 +30,16 @@ public class BookingService {
     public Journal book(@NonNull Transaction transaction, @NonNull EventType event) {
         Set<Transaction> transactions = new HashSet<>();
         transactions.add(transaction);
-        return book(transactions,event);
+        return book(transactions,event,null);
     }
 
     @Transactional
     public Journal book(@NonNull Set<Transaction> transactions, @NonNull EventType event) {
+        return book(transactions,event,null);
+    }
+
+    @Transactional
+    public Journal book(@NonNull Set<Transaction> transactions, @NonNull EventType event, AdditionalInfo additionalInfo) {
         BookingEvent bookingEvent;
         try {
             bookingEvent = event.getEventClass().getDeclaredConstructor().newInstance();
@@ -42,7 +48,7 @@ public class BookingService {
             return null;
         }
         try {
-            return bookInternal(transactions,bookingEvent);
+            return bookInternal(transactions,bookingEvent, additionalInfo);
         } catch (BookingException e) {
             log.error(e.getMessage());
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
@@ -50,11 +56,8 @@ public class BookingService {
         }
     }
 
-    private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event) throws BookingException {
-        if (!event.validateTransactions(transactions)) {
-            throw new BookingException("Incorrect input of transactions for this BookingEvent " + event.getEventTypeName());
-        }
-        event.book(transactions);
+    private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event, AdditionalInfo additionalInfo) throws BookingException {
+        event.book(transactions,additionalInfo);
         for (Booking booking : event.getBookings()) { // set batches
             booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
         }

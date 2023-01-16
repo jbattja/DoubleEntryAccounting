@@ -20,9 +20,9 @@ public class PaidEvent extends BookingEvent {
     }
 
     @Override
-    public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
-        Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT, transactions);
-        Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE, transactions);
+    public void bookInternal() throws BookingException {
+        Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT);
+        Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getDebitAmount(capture), payment);
         addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getCreditAmount(capture), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);

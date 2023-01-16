@@ -13,6 +13,11 @@ import java.util.Set;
 public abstract class BookingEvent {
 
     private final List<Booking> bookings;
+    private Set <Transaction> transactions;
+    private AdditionalInfo additionalInfo;
+    protected AdditionalInfo getAdditionalInfo() {
+        return additionalInfo;
+    }
 
     public List<Booking> getBookings() {
         return bookings;
@@ -24,7 +29,8 @@ public abstract class BookingEvent {
 
     public abstract String getEventTypeName();
     protected abstract Transaction.TransactionType[] requiredTransactionTypes();
-    public boolean validateTransactions(Set<Transaction> transactions) {
+
+    private boolean validateTransactions(Set<Transaction> transactions) {
         if (transactions.size() != requiredTransactionTypes().length) {
             return false;
         }
@@ -41,14 +47,19 @@ public abstract class BookingEvent {
         return true;
     }
 
-    public void book(@NonNull Set <Transaction> transactions) throws BookingException {
-        bookInternal(transactions);
+    public void book(@NonNull Set <Transaction> transactions, @NonNull AdditionalInfo additionalInfo) throws BookingException {
+        if (!validateTransactions(transactions)) {
+            throw new BookingException("Incorrect input of transactions for this BookingEvent " + getEventTypeName());
+        }
+        this.transactions = transactions;
+        this.additionalInfo = additionalInfo;
+        bookInternal();
         for (Transaction transaction : transactions) {
             transaction.setStatus(this.getEventTypeName());
         }
     }
 
-    protected abstract void bookInternal(@NonNull Set <Transaction> transactions) throws BookingException;
+    protected abstract void bookInternal() throws BookingException;
 
     protected void addBooking(@NonNull Account account, @NonNull RegisterType register, @NonNull Amount amount, Transaction transaction) {
         bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), null, transaction));
@@ -62,7 +73,7 @@ public abstract class BookingEvent {
         return new Amount(transaction.getCurrency(),transaction.getAmount()*-1);
     }
 
-    protected Transaction getTransaction(Transaction.TransactionType type, Set<Transaction> transactions) throws BookingException {
+    protected Transaction getTransaction(Transaction.TransactionType type) throws BookingException {
         for (Transaction transaction : transactions) {
             if (transaction.getType().equals(type)) {
                 return transaction;
