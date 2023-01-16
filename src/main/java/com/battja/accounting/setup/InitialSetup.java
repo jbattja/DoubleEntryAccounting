@@ -57,19 +57,19 @@ public class InitialSetup {
             Account streamingIncPhilippines = accountService.createAccount(new Account("StreamingInc_Philippines", Account.AccountType.MERCHANT, streamingInc));
 
             // SETUP Acquirers OVO, GCash, Visa, MC
-            Account ovo = accountService.createAccount(new Account("Ovo", Account.AccountType.ACQUIRER));
-            Account gcash = accountService.createAccount(new Account("Gcash", Account.AccountType.ACQUIRER));
-            Account visa = accountService.createAccount(new Account("Visa", Account.AccountType.ACQUIRER));
-            Account mc = accountService.createAccount(new Account("Mastercard", Account.AccountType.ACQUIRER));
+            Account ovo = accountService.createAccount(new Account("Ovo", Account.AccountType.PARTNER));
+            Account gcash = accountService.createAccount(new Account("Gcash", Account.AccountType.PARTNER));
+            Account visa = accountService.createAccount(new Account("Visa", Account.AccountType.PARTNER));
+            Account mc = accountService.createAccount(new Account("Mastercard", Account.AccountType.PARTNER));
 
-            Account ovoAggr = accountService.createAccount(new Account("OVO_Aggregator", Account.AccountType.ACQUIRER_ACCOUNT, ovo));
-            Account gcashAggr = accountService.createAccount(new Account("GCASH_Aggregator", Account.AccountType.ACQUIRER_ACCOUNT, gcash));
-            Account visaIdStreamingInc= accountService.createAccount(new Account("VISA_ID_StreamingInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaIdTechInc = accountService.createAccount(new Account("VISA_ID_TechInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaPhStreamingInc = accountService.createAccount(new Account("VISA_PH_StreamingInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account visaPhTechInc = accountService.createAccount(new Account("VISA_PH_TechInc", Account.AccountType.ACQUIRER_ACCOUNT, visa));
-            Account mcId = accountService.createAccount(new Account("MC_ID", Account.AccountType.ACQUIRER_ACCOUNT, mc));
-            Account mcPh = accountService.createAccount(new Account("MC_PH", Account.AccountType.ACQUIRER_ACCOUNT, mc));
+            Account ovoAggr = accountService.createAccount(new Account("OVO_Aggregator", Account.AccountType.PARTNER_ACCOUNT, ovo));
+            Account gcashAggr = accountService.createAccount(new Account("GCASH_Aggregator", Account.AccountType.PARTNER_ACCOUNT, gcash));
+            Account visaIdStreamingInc= accountService.createAccount(new Account("VISA_ID_StreamingInc", Account.AccountType.PARTNER_ACCOUNT, visa));
+            Account visaIdTechInc = accountService.createAccount(new Account("VISA_ID_TechInc", Account.AccountType.PARTNER_ACCOUNT, visa));
+            Account visaPhStreamingInc = accountService.createAccount(new Account("VISA_PH_StreamingInc", Account.AccountType.PARTNER_ACCOUNT, visa));
+            Account visaPhTechInc = accountService.createAccount(new Account("VISA_PH_TechInc", Account.AccountType.PARTNER_ACCOUNT, visa));
+            Account mcId = accountService.createAccount(new Account("MC_ID", Account.AccountType.PARTNER_ACCOUNT, mc));
+            Account mcPh = accountService.createAccount(new Account("MC_PH", Account.AccountType.PARTNER_ACCOUNT, mc));
 
             log.info("Creating a couple of transactions");
             Transaction transaction1 = transactionService.newPayment(new Amount("IDR",100000L),streamingIncIndonesia,ovoAggr);

@@ -103,8 +103,8 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
         detailsForm.addField("Status", modification.getStatus());
         detailsForm.addClickableField("Merchant", modification.getMerchantAccount().getAccountName(),
                 AccountDetailsView.class,String.valueOf(modification.getMerchantAccount().getId()));
-        detailsForm.addClickableField("Acquirer account", modification.getAcquirerAccount().getAccountName(),
-                AccountDetailsView.class,String.valueOf(modification.getAcquirerAccount().getId()));
+        detailsForm.addClickableField("Partner account", modification.getPartnerAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(modification.getPartnerAccount().getId()));
         return detailsForm;
     }
 

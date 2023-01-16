@@ -11,7 +11,9 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class AccountService {
@@ -41,24 +43,20 @@ public class AccountService {
         return accountRepository.findByParent(parent);
     }
 
-    public List<Account> listMerchants() {
-        return accountRepository.findByAccountType(Account.AccountType.MERCHANT);
-    }
-
-    public List<Account> listAcquirerAccounts() {
-        return accountRepository.findByAccountType(Account.AccountType.ACQUIRER_ACCOUNT);
+    public List<Account> listAccountsByType(Account.AccountType type) {
+        return accountRepository.findByAccountType(type);
     }
 
     public List<Account> listAvailableParentAccounts(Account.AccountType type) {
-        List<Account.AccountType> accountTypes = new ArrayList<>();
+        Set<Account.AccountType> accountTypes = new HashSet<>();
         if (type == null) {
-            accountTypes.add(Account.AccountType.PSP);
-            accountTypes.add(Account.AccountType.COMPANY);
-            accountTypes.add(Account.AccountType.ACQUIRER);
+            for (Account.AccountType accountType : Account.AccountType.values()) {
+                accountTypes.add(accountType.getParent());
+            }
         } else {
             accountTypes.add(type.getParent());
         }
-        return accountRepository.findByAccountTypeIn(accountTypes);
+        return accountRepository.findByAccountTypeIn(accountTypes.stream().toList());
     }
 
     @Transactional

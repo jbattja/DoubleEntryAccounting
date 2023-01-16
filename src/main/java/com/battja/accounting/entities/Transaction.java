@@ -24,7 +24,7 @@ public class Transaction {
     @ManyToOne
     private Account merchantAccount;
     @ManyToOne
-    private Account acquirerAccount;
+    private Account partnerAccount;
     private Long amount;
     private String currency;
     private String status;
@@ -35,7 +35,7 @@ public class Transaction {
     public String toString() {
         return String.format(
                 "'%s'[id=%d, transactionReference='%s', modificationReference='%s', merchantAccount='%s', acquirerAccount='%s', amount='%s' '%d']",
-                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), acquirerAccount.getAccountName(), currency, amount);
+                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), partnerAccount.getAccountName(), currency, amount);
     }
 
     public Integer getId() {
@@ -78,12 +78,12 @@ public class Transaction {
         this.merchantAccount = merchantAccount;
     }
 
-    public Account getAcquirerAccount() {
-        return acquirerAccount;
+    public Account getPartnerAccount() {
+        return partnerAccount;
     }
 
-    public void setAcquirerAccount(Account acquirerAccount) {
-        this.acquirerAccount = acquirerAccount;
+    public void setPartnerAccount(Account partnerAccount) {
+        this.partnerAccount = partnerAccount;
     }
 
     public Long getAmount() {

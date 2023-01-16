@@ -22,6 +22,6 @@ public class CancelEvent extends BookingEvent {
     protected void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT, transactions);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getDebitAmount(payment), payment);
-        addBooking(payment.getAcquirerAccount(), RegisterType.AUTHORISED, getCreditAmount(payment), payment);
+        addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getCreditAmount(payment), payment);
     }
 }

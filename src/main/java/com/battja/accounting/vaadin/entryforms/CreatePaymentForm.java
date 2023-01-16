@@ -28,7 +28,7 @@ public class CreatePaymentForm extends VerticalLayout {
     private final TransactionService transactionService;
     private final AccountService accountService;
     private Select<Account> merchant;
-    private Select<Account> acquirerAccount;
+    private Select<Account> partnerAccount;
     private Select<String> currency;
     private IntegerField amount;
 
@@ -52,15 +52,15 @@ public class CreatePaymentForm extends VerticalLayout {
 
         merchant = new Select<>();
         merchant.setLabel("Merchant Account");
-        merchant.setItems(accountService.listMerchants());
+        merchant.setItems(accountService.listAccountsByType(Account.AccountType.MERCHANT));
         merchant.setRenderer(new TextRenderer<>(Account::getAccountName));
         layout.add(merchant);
 
-        acquirerAccount = new Select<>();
-        acquirerAccount.setLabel("Acquirer Account");
-        acquirerAccount.setItems(accountService.listAcquirerAccounts());
-        acquirerAccount.setRenderer(new TextRenderer<>(Account::getAccountName));
-        layout.add(acquirerAccount);
+        partnerAccount = new Select<>();
+        partnerAccount.setLabel("Partner Account");
+        partnerAccount.setItems(accountService.listAccountsByType(Account.AccountType.PARTNER_ACCOUNT));
+        partnerAccount.setRenderer(new TextRenderer<>(Account::getAccountName));
+        layout.add(partnerAccount);
 
         currency = new Select<>();
         currency.setLabel("Currency");
@@ -76,7 +76,7 @@ public class CreatePaymentForm extends VerticalLayout {
 
     private void createPayment() {
         merchant.setHelperComponent(null);
-        acquirerAccount.setHelperComponent(null);
+        partnerAccount.setHelperComponent(null);
         currency.setHelperComponent(null);
         amount.setHelperComponent(null);
         if(merchant.getValue() == null) {
@@ -84,8 +84,8 @@ public class CreatePaymentForm extends VerticalLayout {
             merchant.focus();
             return;
         }
-        if(acquirerAccount.getValue()  == null) {
-            acquirerAccount.setHelperComponent(new Span("Field is required"));
+        if(partnerAccount.getValue()  == null) {
+            partnerAccount.setHelperComponent(new Span("Field is required"));
             merchant.focus();
             return;
         }
@@ -105,7 +105,7 @@ public class CreatePaymentForm extends VerticalLayout {
             return;
         }
         try {
-            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()), merchant.getValue(), acquirerAccount.getValue());
+            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()), merchant.getValue(), partnerAccount.getValue());
             if (transaction != null) {
                 getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class, String.valueOf(transaction.getId())));
             }

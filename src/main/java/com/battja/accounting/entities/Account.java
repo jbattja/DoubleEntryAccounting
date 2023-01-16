@@ -2,6 +2,7 @@ package com.battja.accounting.entities;
 
 import com.battja.accounting.util.CommonUtil;
 import jakarta.persistence.*;
+import org.springframework.lang.NonNull;
 
 @Entity
 public class Account {
@@ -10,7 +11,7 @@ public class Account {
     public final static String DEFAULT_PSP_ACCOUNT_NAME = "BattjaPay";
 
     public enum AccountType {
-        PSP(null), ACQUIRER(PSP), ACQUIRER_ACCOUNT(ACQUIRER), COMPANY(PSP), MERCHANT(COMPANY), BANK(PSP), BANK_ACCOUNT(BANK);
+        PSP(null), PARTNER(PSP), PARTNER_ACCOUNT(PARTNER), COMPANY(PSP), MERCHANT(COMPANY), BANK(PSP), BANK_ACCOUNT(BANK);
         final AccountType parent;
         AccountType(AccountType parent) {
             this.parent =parent;
@@ -24,6 +25,16 @@ public class Account {
         public AccountType getParent() {
             return parent;
         }
+
+        public static boolean canHaveChildren(@NonNull Account.AccountType accountType) {
+            for (Account.AccountType type : Account.AccountType.values()) {
+                if (accountType.equals(type.getParent())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 
     @Id

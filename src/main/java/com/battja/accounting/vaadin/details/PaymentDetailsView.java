@@ -90,8 +90,8 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         detailsForm.addField("Status", payment.getStatus());
         detailsForm.addClickableField("Merchant", payment.getMerchantAccount().getAccountName(),
                 AccountDetailsView.class,String.valueOf(payment.getMerchantAccount().getId()));
-        detailsForm.addClickableField("Acquirer account", payment.getAcquirerAccount().getAccountName(),
-                AccountDetailsView.class,String.valueOf(payment.getAcquirerAccount().getId()));
+        detailsForm.addClickableField("Partner account", payment.getPartnerAccount().getAccountName(),
+                AccountDetailsView.class,String.valueOf(payment.getPartnerAccount().getId()));
         return detailsForm;
     }
 
@@ -203,7 +203,7 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         modificationGrid.addColumn(Transaction::getStatus).setHeader("Status");
         modificationGrid.addColumn(Transaction::getCurrency).setHeader("Currency");
         modificationGrid.addColumn(Transaction::getAmount).setHeader("Amount");
-        modificationGrid.addColumn(transaction -> transaction.getAcquirerAccount().getAccountName()).setHeader("Acquirer Account");
+        modificationGrid.addColumn(transaction -> transaction.getPartnerAccount().getAccountName()).setHeader("Partner Account");
         modificationGrid.setAllRowsVisible(true);
         modificationGrid.addItemClickListener(itemClickEvent -> modificationGrid.getUI().ifPresent(
                 ui -> ui.navigate(ModificationDetailsView.class,String.valueOf(itemClickEvent.getItem().getId()))

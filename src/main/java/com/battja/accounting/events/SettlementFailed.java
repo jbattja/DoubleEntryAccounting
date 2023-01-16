@@ -23,7 +23,7 @@ public class SettlementFailed extends BookingEvent {
     public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
         Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE, transactions);
         addBooking(capture.getMerchantAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
-        addBooking(capture.getAcquirerAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
+        addBooking(capture.getPartnerAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
     }
 
 }

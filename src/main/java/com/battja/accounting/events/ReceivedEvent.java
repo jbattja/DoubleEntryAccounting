@@ -23,7 +23,7 @@ public class ReceivedEvent extends BookingEvent {
     public void bookInternal(@NonNull Set<Transaction> transactions) throws BookingException {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT, transactions);
         addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getCreditAmount(payment), payment);
-        addBooking(payment.getAcquirerAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
+        addBooking(payment.getPartnerAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
     }
 
 }

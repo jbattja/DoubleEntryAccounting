@@ -57,7 +57,7 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
                 add(new H4("Child Accounts"));
                 add(GridCreator.createAccountGrid(children));
             }
-            if (!(account.getAccountType().equals(Account.AccountType.MERCHANT) || account.getAccountType().equals(Account.AccountType.ACQUIRER_ACCOUNT))) {
+            if (Account.AccountType.canHaveChildren(account.getAccountType())) {
                 Button createAccountButton = new Button("Create Child Account");
                 createAccountButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
                 createAccountButton.addClickListener(buttonClickEvent -> createAccountButton.getUI().ifPresent(

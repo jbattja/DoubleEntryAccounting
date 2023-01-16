@@ -78,13 +78,14 @@ public class CreateAccountForm extends VerticalLayout implements HasUrlParameter
             if (parentAccount.getAccountType().equals(Account.AccountType.COMPANY)) {
                 type.setValue(Account.AccountType.MERCHANT);
             }
-            if (parentAccount.getAccountType().equals(Account.AccountType.ACQUIRER)) {
-                type.setValue(Account.AccountType.ACQUIRER_ACCOUNT);
+            if (parentAccount.getAccountType().equals(Account.AccountType.PARTNER)) {
+                type.setValue(Account.AccountType.PARTNER_ACCOUNT);
             }
         }
         layout.add(type);
 
         parent = new ComboBox<>();
+        parent.setLabel("Parent");
         parent.setItems(getAvailableAccounts());
         parent.setRenderer(new TextRenderer<>(Account::getAccountName));
         parent.setItemLabelGenerator(Account::getAccountName);

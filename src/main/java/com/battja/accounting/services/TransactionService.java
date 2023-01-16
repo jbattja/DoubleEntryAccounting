@@ -34,13 +34,13 @@ public class TransactionService {
             log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
             throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
         }
-        if (!acquirerAccount.getAccountType().equals(Account.AccountType.ACQUIRER_ACCOUNT)) {
-            log.warn("Failed to create Payment: not a valid acquirer account: " + acquirerAccount);
-            throw new IllegalArgumentException("Not a valid acquirer account: " + acquirerAccount.getAccountName());
+        if (!acquirerAccount.getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
+            log.warn("Failed to create Payment: not a valid partner account: " + acquirerAccount);
+            throw new IllegalArgumentException("Not a valid partner account: " + acquirerAccount.getAccountName());
         }
         Transaction transaction = new Transaction();
         transaction.setMerchantAccount(merchantAccount);
-        transaction.setAcquirerAccount(acquirerAccount);
+        transaction.setPartnerAccount(acquirerAccount);
         transaction.setAmount(amount.getValue());
         transaction.setCurrency(amount.getCurrency());
         transaction.setType(Transaction.TransactionType.PAYMENT);
@@ -68,7 +68,7 @@ public class TransactionService {
         }
         Transaction capture = new Transaction();
         capture.setMerchantAccount(payment.getMerchantAccount());
-        capture.setAcquirerAccount(payment.getAcquirerAccount());
+        capture.setPartnerAccount(payment.getPartnerAccount());
         capture.setAmount(amount.getValue());
         capture.setCurrency(amount.getCurrency());
         capture.setType(Transaction.TransactionType.CAPTURE);

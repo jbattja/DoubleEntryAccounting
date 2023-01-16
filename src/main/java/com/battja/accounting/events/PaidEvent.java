@@ -24,9 +24,9 @@ public class PaidEvent extends BookingEvent {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT, transactions);
         Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE, transactions);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getDebitAmount(capture), payment);
-        addBooking(payment.getAcquirerAccount(), RegisterType.AUTHORISED, getCreditAmount(capture), payment);
+        addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getCreditAmount(capture), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
-        addBooking(payment.getAcquirerAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
+        addBooking(payment.getPartnerAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
     }
 
 }

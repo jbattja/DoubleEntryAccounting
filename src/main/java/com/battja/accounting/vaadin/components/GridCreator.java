@@ -138,7 +138,7 @@ public class GridCreator {
         Grid.Column<Transaction> statusColumn =  grid.addColumn(Transaction::getStatus).setHeader("Status");
         Grid.Column<Transaction> currencyColumn = grid.addColumn(Transaction::getCurrency).setHeader("Currency");
         Grid.Column<Transaction> amountColumn = grid.addColumn(Transaction::getAmount).setHeader("Amount");
-        Grid.Column<Transaction> acquirerAccountColumn = grid.addColumn(transaction -> transaction.getAcquirerAccount().getAccountName()).setHeader("Acquirer Account");
+        Grid.Column<Transaction> acquirerAccountColumn = grid.addColumn(transaction -> transaction.getPartnerAccount().getAccountName()).setHeader("Partner Account");
 
         TransactionFilter transactionFilter = new TransactionFilter(dataView);
         grid.getHeaderRows().clear();
@@ -148,7 +148,7 @@ public class GridCreator {
         headerRow.getCell(statusColumn).setComponent(new FilterHeader(transactionFilter::setStatus));
         headerRow.getCell(currencyColumn).setComponent(new FilterHeader(transactionFilter::setCurrency));
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
-        headerRow.getCell(acquirerAccountColumn).setComponent(new FilterHeader(transactionFilter::setAcquirerAccount));
+        headerRow.getCell(acquirerAccountColumn).setComponent(new FilterHeader(transactionFilter::setPartnerAccount));
 
         grid.addItemClickListener(transactionItemClickEvent -> grid.getUI().ifPresent(
                 ui -> ui.navigate(PaymentDetailsView.class,String.valueOf(transactionItemClickEvent.getItem().getId()))
@@ -164,7 +164,7 @@ public class GridCreator {
         private String status;
         private String currency;
         private String amount;
-        private String acquirerAccount;
+        private String partnerAccount;
 
         public TransactionFilter(GridListDataView<Transaction> dataView) {
             this.dataView = dataView;
@@ -196,8 +196,8 @@ public class GridCreator {
             this.dataView.refreshAll();
         }
 
-        public void setAcquirerAccount(String acquirerAccount) {
-            this.acquirerAccount = acquirerAccount;
+        public void setPartnerAccount(String partnerAccount) {
+            this.partnerAccount = partnerAccount;
             this.dataView.refreshAll();
         }
 
@@ -208,7 +208,7 @@ public class GridCreator {
                             && matches(transaction.getStatus(), status)
                             && matches((transaction.getCurrency()),currency)
                             && matches((transaction.getAmount().toString()),amount)
-                            && matches((transaction.getAcquirerAccount().getAccountName()),acquirerAccount)
+                            && matches((transaction.getPartnerAccount().getAccountName()), partnerAccount)
             );
         }
 
