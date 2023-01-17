@@ -2,8 +2,6 @@ package com.battja.accounting.events;
 
 import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.entities.Amount;
-import com.battja.accounting.entities.RegisterType;
 import com.battja.accounting.services.FeeService;
 import org.springframework.lang.NonNull;
 
@@ -113,7 +111,7 @@ public abstract class BookingEvent {
 
     protected void bookFees(Transaction transaction) {
         for (Map.Entry<Account, Fee> fee : getFees().entrySet()) {
-            List<Amount> calculatedFees =  FeeService.calulateFee(fee.getValue(),getCreditAmount(transaction));
+            List<Amount> calculatedFees =  FeeService.calculateFee(fee.getValue(),getCreditAmount(transaction));
             for (Amount amount : calculatedFees) {
                 if (amount.getValue() != 0) {
                     addBooking(fee.getKey(),RegisterType.FEES,new Amount(amount.getCurrency(),amount.getValue()*-1),transaction);

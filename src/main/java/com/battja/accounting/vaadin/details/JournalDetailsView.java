@@ -56,7 +56,7 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
             add(createDetailsView());
             Grid<Transaction> transactionGrid = createTransactionsGrid();
             if (!transactions.isEmpty()) {
-                add(new H4("Trasactions"));
+                add(new H4("Transactions"));
                 add(transactionGrid);
             }
             if (!journal.getBookings().isEmpty()) {

@@ -15,12 +15,12 @@ import java.util.List;
 @Service
 public class JournalService {
 
-    private static final Logger log = LoggerFactory.getLogger(JournalService.class);
-
     public Journal getJournalWithBookings(@NonNull Integer journalId) {
         Journal journal = journalRepository.findById(journalId).orElse(null);
-        List<Booking> bookings = bookingRepository.findByJournal(journal);
-        journal.setBookings(bookings);
+        if (journal != null) {
+            List<Booking> bookings = bookingRepository.findByJournal(journal);
+            journal.setBookings(bookings);
+        }
         return journal;
     }
 

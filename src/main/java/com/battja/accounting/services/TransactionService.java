@@ -3,8 +3,6 @@ package com.battja.accounting.services;
 import com.battja.accounting.entities.*;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.entities.Amount;
-import com.battja.accounting.entities.RegisterType;
 import com.battja.accounting.repositories.BatchEntryRepository;
 import com.battja.accounting.repositories.BookingRepository;
 import com.battja.accounting.repositories.TransactionRepository;

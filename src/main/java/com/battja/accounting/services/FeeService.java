@@ -9,12 +9,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class FeeService {
 
-    public static List<Amount> calulateFee(Fee fee, Amount amount) {
+    public static List<Amount> calculateFee(Fee fee, Amount amount) {
         List<Amount> amounts = new ArrayList<>();
         if (fee.getFixedAmount() != 0 && fee.getCurrency() != null) {
             amounts.add(new Amount(fee.getCurrency(),fee.getFixedAmount()));

@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 public class Contract {
 
-    public static String DEFAULT_MERCHANT_CONTRACT_NAME = "defaultMerchantContract";
+    public static final String DEFAULT_MERCHANT_CONTRACT_NAME = "defaultMerchantContract";
 
     @Id
     @GeneratedValue

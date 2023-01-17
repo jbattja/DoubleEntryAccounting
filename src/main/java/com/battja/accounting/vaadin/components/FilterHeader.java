@@ -1,7 +1,5 @@
 package com.battja.accounting.vaadin.components;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
