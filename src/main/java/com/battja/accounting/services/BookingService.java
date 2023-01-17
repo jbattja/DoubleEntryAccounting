@@ -1,9 +1,6 @@
 package com.battja.accounting.services;
 
-import com.battja.accounting.entities.AdditionalInfo;
-import com.battja.accounting.entities.Booking;
-import com.battja.accounting.entities.Journal;
-import com.battja.accounting.entities.Transaction;
+import com.battja.accounting.entities.*;
 import com.battja.accounting.events.BookingEvent;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
@@ -18,8 +15,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class BookingService {
@@ -48,7 +44,8 @@ public class BookingService {
             return null;
         }
         try {
-            return bookInternal(transactions,bookingEvent, additionalInfo);
+            Map<Account,Fee> fees = findFees(transactions,event);
+            return bookInternal(transactions,bookingEvent, additionalInfo, fees);
         } catch (BookingException e) {
             log.error(e.getMessage());
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
@@ -56,8 +53,8 @@ public class BookingService {
         }
     }
 
-    private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event, AdditionalInfo additionalInfo) throws BookingException {
-        event.book(transactions,additionalInfo);
+    private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event, AdditionalInfo additionalInfo, @NonNull Map<Account, Fee> fees) throws BookingException {
+        event.book(transactions,additionalInfo, fees);
         for (Booking booking : event.getBookings()) { // set batches
             booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
         }
@@ -75,8 +72,51 @@ public class BookingService {
         return journal;
     }
 
+    private Map<Account,Fee> findFees(@NonNull Set<Transaction> transactions, @NonNull EventType eventType) {
+        Set<Account> accounts = new HashSet<>();
+        Set<PaymentMethod> paymentMethods = new HashSet<>();
+        for (Transaction t : transactions) {
+            accounts.add(t.getMerchantAccount());
+            accounts.add(t.getPartnerAccount());
+            if (t.getPaymentMethod() != null) {
+                paymentMethods.add(t.getPaymentMethod());
+            }
+        }
+        Map<Account,Fee> feeMap = new HashMap<>();
+        if (paymentMethods.size() != 1) {
+            return feeMap;
+        }
+        for (Account account : accounts) {
+            List<Fee> possibleFees = feeService.getFeeLines(account.getContract(), eventType);
+            if (possibleFees.isEmpty()) {
+                continue;
+            }
+            Fee matchedFee = null;
+            for (Fee fee : possibleFees) {
+                if (paymentMethods.contains(fee.getPaymentMethod())) {
+                    matchedFee = fee;
+                    break;
+                }
+            }
+            if (matchedFee == null) {
+                for (Fee fee : possibleFees) {
+                    if (fee.getPaymentMethod() == null) {
+                        matchedFee = fee;
+                        break;
+                    }
+                }
+            }
+            if (matchedFee != null) {
+                feeMap.put(account,matchedFee);
+            }
+        }
+        return feeMap;
+    }
+
     @Autowired
     BatchService batchService;
+    @Autowired
+    FeeService feeService;
     @Autowired
     JournalRepository journalRepository;
     @Autowired

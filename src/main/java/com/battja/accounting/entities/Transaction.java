@@ -25,6 +25,8 @@ public class Transaction {
     private Account merchantAccount;
     @ManyToOne
     private Account partnerAccount;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
     private Long amount;
     private String currency;
     private String status;
@@ -84,6 +86,14 @@ public class Transaction {
 
     public void setPartnerAccount(Account partnerAccount) {
         this.partnerAccount = partnerAccount;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
     public Long getAmount() {

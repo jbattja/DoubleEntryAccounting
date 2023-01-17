@@ -4,19 +4,22 @@ import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.entities.Amount;
 import com.battja.accounting.entities.RegisterType;
+import com.battja.accounting.services.FeeService;
 import org.springframework.lang.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class BookingEvent {
 
     private final List<Booking> bookings;
     private Set <Transaction> transactions;
     private AdditionalInfo additionalInfo;
+    private Map<Account,Fee> fees;
     protected AdditionalInfo getAdditionalInfo() {
         return additionalInfo;
+    }
+    protected Map<Account,Fee> getFees() {
+        return fees;
     }
 
     public List<Booking> getBookings() {
@@ -47,15 +50,76 @@ public abstract class BookingEvent {
         return true;
     }
 
-    public void book(@NonNull Set <Transaction> transactions, @NonNull AdditionalInfo additionalInfo) throws BookingException {
+    public void book(@NonNull Set<Transaction> transactions, @NonNull AdditionalInfo additionalInfo, @NonNull Map<Account, Fee> fees) throws BookingException {
         if (!validateTransactions(transactions)) {
             throw new BookingException("Incorrect input of transactions for this BookingEvent " + getEventTypeName());
         }
         this.transactions = transactions;
         this.additionalInfo = additionalInfo;
+        this.fees = fees;
         bookInternal();
         for (Transaction transaction : transactions) {
             transaction.setStatus(this.getEventTypeName());
+        }
+        deductFeesFromPayable();
+        checkIfBalanced();
+    }
+
+    private void checkIfBalanced() throws BookingException {
+        Map<String,Long> balancePerCurrency = new HashMap<>();
+        for (Booking b : bookings) {
+            Long currentBalance = balancePerCurrency.get(b.getCurrency());
+            if (currentBalance == null) {
+                currentBalance = 0L;
+            }
+            balancePerCurrency.put(b.getCurrency(),b.getAmount()+currentBalance);
+        }
+        for (Map.Entry<String,Long> balance : balancePerCurrency.entrySet()) {
+            if (balance.getValue() != 0) {
+                throw new BookingException("Booking not balanced out for booking " + getEventTypeName());
+            }
+        }
+    }
+
+    private void deductFeesFromPayable() {
+        // deduct fees from Payable
+        Booking payableBooking = null;
+        for (Booking booking : bookings) {
+            if (RegisterType.PAYABLE.equals(booking.getRegister())) {
+                payableBooking = booking;
+                break;
+            }
+        }
+        if (payableBooking == null) {
+            return;
+        }
+        long deductionAmount = 0;
+        List<Booking> bookingsToInvert = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (RegisterType.FEES.equals(booking.getRegister()) && payableBooking.getAccount().equals(booking.getAccount())
+                    && payableBooking.getCurrency().equals(booking.getCurrency())) {
+                deductionAmount += booking.getAmount();
+                bookingsToInvert.add(booking);
+            }
+        }
+        if (deductionAmount != 0) {
+            payableBooking.setAmount(payableBooking.getAmount() + deductionAmount);
+            for (Booking bookingToInvert : bookingsToInvert) {
+                addBooking(bookingToInvert.getAccount(), bookingToInvert.getRegister(),
+                        new Amount(bookingToInvert.getCurrency(), bookingToInvert.getAmount() * -1), bookingToInvert.getTransaction());
+            }
+        }
+    }
+
+    protected void bookFees(Transaction transaction) {
+        for (Map.Entry<Account, Fee> fee : getFees().entrySet()) {
+            List<Amount> calculatedFees =  FeeService.calulateFee(fee.getValue(),getCreditAmount(transaction));
+            for (Amount amount : calculatedFees) {
+                if (amount.getValue() != 0) {
+                    addBooking(fee.getKey(),RegisterType.FEES,new Amount(amount.getCurrency(),amount.getValue()*-1),transaction);
+                    addBooking(Account.defaultPspAccount(),RegisterType.REVENUE,new Amount(amount.getCurrency(),amount.getValue()),transaction);
+                }
+            }
         }
     }
 

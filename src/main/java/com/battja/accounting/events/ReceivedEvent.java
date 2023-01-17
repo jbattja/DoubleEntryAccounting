@@ -24,6 +24,7 @@ public class ReceivedEvent extends BookingEvent {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT);
         addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getCreditAmount(payment), payment);
         addBooking(payment.getPartnerAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
+        bookFees(payment);
     }
 
 }

@@ -1,11 +1,8 @@
 package com.battja.accounting.events;
 
+import com.battja.accounting.entities.RegisterType;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.entities.RegisterType;
-import org.springframework.lang.NonNull;
-
-import java.util.Set;
 
 public class AuthorisedEvent extends BookingEvent {
 
@@ -26,5 +23,6 @@ public class AuthorisedEvent extends BookingEvent {
         addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getCreditAmount(payment), payment);
         addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getDebitAmount(payment), payment);
+        bookFees(payment);
     }
 }

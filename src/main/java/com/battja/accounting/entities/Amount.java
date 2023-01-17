@@ -2,6 +2,8 @@ package com.battja.accounting.entities;
 
 public class Amount {
 
+    public enum Currency{IDR,USD,SGD,MYR,EUR,PHP,THB}
+
     private String currency;
     private Long value;
 

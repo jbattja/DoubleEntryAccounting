@@ -46,6 +46,9 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Account parent;
+    @ManyToOne
+    @JoinColumn(name = "contract_id")
+    private Contract contract;
 
     protected Account() {}
 
@@ -58,12 +61,19 @@ public class Account {
             throw new IllegalArgumentException("Account needs to have a parent");
         }
     }
-
     public Account(String accountName, AccountType accountType, Account parent) {
         this.accountName = accountName;
         this.accountType = accountType;
         this.parent = parent;
     }
+
+    public Account(String accountName, AccountType accountType, Account parent, Contract contract) {
+        this.accountName = accountName;
+        this.accountType = accountType;
+        this.parent = parent;
+        this.contract = contract;
+    }
+
 
     public Integer getId() {
         return id;
@@ -83,6 +93,10 @@ public class Account {
 
     public Account getParent() {
         return parent;
+    }
+
+    public Contract getContract() {
+        return contract;
     }
 
     @Override

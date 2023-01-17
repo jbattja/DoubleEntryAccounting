@@ -6,6 +6,8 @@ public enum RegisterType {
     AUTHORISED(true),
     CAPTURED(true),
     PAYABLE(false),
+    FEES(true),
+    REVENUE(false),
     EARLY_SETTLEMENT(false);
 
     private final boolean requiresEntryReconciliation;

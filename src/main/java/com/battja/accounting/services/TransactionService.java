@@ -29,7 +29,7 @@ public class TransactionService {
     String transactionPrefix;
 
     @Transactional
-    public Transaction newPayment(@NonNull Amount amount, @NonNull Account merchantAccount, @NonNull Account acquirerAccount) {
+    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @NonNull Account acquirerAccount) {
         if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
             log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
             throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
@@ -41,6 +41,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setMerchantAccount(merchantAccount);
         transaction.setPartnerAccount(acquirerAccount);
+        transaction.setPaymentMethod(paymentMethod);
         transaction.setAmount(amount.getValue());
         transaction.setCurrency(amount.getCurrency());
         transaction.setType(Transaction.TransactionType.PAYMENT);
@@ -72,6 +73,7 @@ public class TransactionService {
         capture.setAmount(amount.getValue());
         capture.setCurrency(amount.getCurrency());
         capture.setType(Transaction.TransactionType.CAPTURE);
+        capture.setPaymentMethod(payment.getPaymentMethod());
         capture.setTransactionReference(createTransactionReference());
         capture.setOriginalReference(payment.getTransactionReference());
         capture = transactionRepository.save(capture);

@@ -27,6 +27,7 @@ public class PaidEvent extends BookingEvent {
         addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getCreditAmount(capture), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
         addBooking(payment.getPartnerAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
+        bookFees(capture);
     }
 
 }

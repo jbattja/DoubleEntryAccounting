@@ -135,6 +135,7 @@ public class GridCreator {
         grid.removeAllColumns();
         Grid.Column<Transaction> merchantColumn = grid.addColumn(transaction -> transaction.getMerchantAccount().getAccountName()).setHeader("Merchant");
         Grid.Column<Transaction> referenceColumn = grid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
+        Grid.Column<Transaction> paymentMethod =  grid.addColumn(Transaction::getPaymentMethod).setHeader("Payment Method");
         Grid.Column<Transaction> statusColumn =  grid.addColumn(Transaction::getStatus).setHeader("Status");
         Grid.Column<Transaction> currencyColumn = grid.addColumn(Transaction::getCurrency).setHeader("Currency");
         Grid.Column<Transaction> amountColumn = grid.addColumn(Transaction::getAmount).setHeader("Amount");
@@ -145,6 +146,7 @@ public class GridCreator {
         HeaderRow headerRow = grid.appendHeaderRow();
         headerRow.getCell(merchantColumn).setComponent(new FilterHeader(transactionFilter::setMerchant));
         headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
+        headerRow.getCell(paymentMethod).setComponent(new FilterHeader(transactionFilter::setPaymentMethod));
         headerRow.getCell(statusColumn).setComponent(new FilterHeader(transactionFilter::setStatus));
         headerRow.getCell(currencyColumn).setComponent(new FilterHeader(transactionFilter::setCurrency));
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
@@ -161,6 +163,7 @@ public class GridCreator {
 
         private String merchant;
         private String reference;
+        private String paymentMethod;
         private String status;
         private String currency;
         private String amount;
@@ -178,6 +181,11 @@ public class GridCreator {
 
         public void setReference(String reference) {
             this.reference = reference;
+            this.dataView.refreshAll();
+        }
+
+        public void setPaymentMethod(String paymentMethod) {
+            this.paymentMethod = paymentMethod;
             this.dataView.refreshAll();
         }
 
@@ -205,6 +213,7 @@ public class GridCreator {
             return (
                     matches(transaction.getMerchantAccount().getAccountName(), merchant)
                             && matches(transaction.getTransactionReference(), reference)
+                            && matches(transaction.getPaymentMethod().toString(), paymentMethod)
                             && matches(transaction.getStatus(), status)
                             && matches((transaction.getCurrency()),currency)
                             && matches((transaction.getAmount().toString()),amount)

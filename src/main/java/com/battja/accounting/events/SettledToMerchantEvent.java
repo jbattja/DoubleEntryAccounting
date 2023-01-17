@@ -25,5 +25,6 @@ public class SettledToMerchantEvent extends BookingEvent {
             throw new BookingException("Unable to settle to merchant without funding source");
         }
         addBooking(getAdditionalInfo().getFundingSource(), RegisterType.EARLY_SETTLEMENT, getDebitAmount(capture),capture);
+        bookFees(capture);
     }
 }

@@ -24,6 +24,7 @@ public class RefusedEvent extends BookingEvent {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT);
         addBooking(payment.getPartnerAccount(), RegisterType.RECEIVED, getCreditAmount(payment), payment);
         addBooking(payment.getMerchantAccount(), RegisterType.RECEIVED, getDebitAmount(payment), payment);
+        bookFees(payment);
     }
 
 }

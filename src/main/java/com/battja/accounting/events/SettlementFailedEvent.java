@@ -24,6 +24,7 @@ public class SettlementFailedEvent extends BookingEvent {
         Transaction capture = getTransaction(Transaction.TransactionType.CAPTURE);
         addBooking(capture.getMerchantAccount(), RegisterType.CAPTURED, getDebitAmount(capture), capture);
         addBooking(capture.getPartnerAccount(), RegisterType.CAPTURED, getCreditAmount(capture), capture);
+        bookFees(capture);
     }
 
 }

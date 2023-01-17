@@ -23,5 +23,6 @@ public class CancelEvent extends BookingEvent {
         Transaction payment = getTransaction(Transaction.TransactionType.PAYMENT);
         addBooking(payment.getMerchantAccount(), RegisterType.AUTHORISED, getDebitAmount(payment), payment);
         addBooking(payment.getPartnerAccount(), RegisterType.AUTHORISED, getCreditAmount(payment), payment);
+        bookFees(payment);
     }
 }

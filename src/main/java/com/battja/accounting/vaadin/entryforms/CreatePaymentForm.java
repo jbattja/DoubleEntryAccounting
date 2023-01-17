@@ -1,6 +1,7 @@
 package com.battja.accounting.vaadin.entryforms;
 
 import com.battja.accounting.entities.Account;
+import com.battja.accounting.entities.PaymentMethod;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.entities.Amount;
 import com.battja.accounting.services.AccountService;
@@ -29,6 +30,7 @@ public class CreatePaymentForm extends VerticalLayout {
     private final AccountService accountService;
     private Select<Account> merchant;
     private Select<Account> partnerAccount;
+    private Select<PaymentMethod> paymentMethod;
     private Select<String> currency;
     private IntegerField amount;
 
@@ -62,6 +64,11 @@ public class CreatePaymentForm extends VerticalLayout {
         partnerAccount.setRenderer(new TextRenderer<>(Account::getAccountName));
         layout.add(partnerAccount);
 
+        paymentMethod = new Select<>();
+        paymentMethod.setLabel("Payment Method");
+        paymentMethod.setItems(PaymentMethod.values());
+        layout.add(paymentMethod);
+
         currency = new Select<>();
         currency.setLabel("Currency");
         currency.setItems("IDR","PHP","SGD","USD");
@@ -86,26 +93,31 @@ public class CreatePaymentForm extends VerticalLayout {
         }
         if(partnerAccount.getValue()  == null) {
             partnerAccount.setHelperComponent(new Span("Field is required"));
-            merchant.focus();
+            partnerAccount.focus();
+            return;
+        }
+        if(paymentMethod.getValue()  == null) {
+            paymentMethod.setHelperComponent(new Span("Field is required"));
+            paymentMethod.focus();
             return;
         }
         if(currency.getValue()  == null) {
             currency.setHelperComponent(new Span("Field is required"));
-            merchant.focus();
+            currency.focus();
             return;
         }
         if(amount.getValue()  == null) {
             amount.setHelperComponent(new Span("Field is required"));
-            merchant.focus();
+            amount.focus();
             return;
         }
         if(amount.getValue() <= 0) {
             amount.setHelperComponent(new Span("Amount needs to be more than 0"));
-            merchant.focus();
+            amount.focus();
             return;
         }
         try {
-            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()), merchant.getValue(), partnerAccount.getValue());
+            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()),paymentMethod.getValue(), merchant.getValue(), partnerAccount.getValue());
             if (transaction != null) {
                 getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class, String.valueOf(transaction.getId())));
             }

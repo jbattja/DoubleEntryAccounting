@@ -87,6 +87,7 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         ReadOnlyForm detailsForm = new ReadOnlyForm();
         detailsForm.addField("Reference", payment.getTransactionReference());
         detailsForm.addField("Amount", payment.getCurrency() + " " + payment.getAmount());
+        detailsForm.addField("Payment Method", payment.getPaymentMethod().toString());
         detailsForm.addField("Status", payment.getStatus());
         detailsForm.addClickableField("Merchant", payment.getMerchantAccount().getAccountName(),
                 AccountDetailsView.class,String.valueOf(payment.getMerchantAccount().getId()));
