@@ -54,6 +54,11 @@
 			</artifactId>
 			<version>24.0.0.alpha7</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<repositories>
@@ -75,6 +80,7 @@
 	</pluginRepositories>
 
 	<build>
+		<finalName>${artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -96,5 +102,6 @@
 
 		</plugins>
 	</build>
+	<packaging>war</packaging>
 
 </project>
