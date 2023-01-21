@@ -11,6 +11,7 @@ public interface BatchEntryRepository extends JpaRepository<BatchEntry,Integer> 
 
     @EntityGraph(attributePaths = { "journals", "batch","transaction" })
     List<BatchEntry> findByTransaction(Transaction transaction);
+    @EntityGraph(attributePaths = { "journals", "batch","transaction" })
     List<BatchEntry> findByBatchId(Integer batchId);
 
 }

@@ -78,7 +78,9 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
         transactionGrid.removeAllColumns();
         transactions = new HashSet<>();
         for (Booking b: journal.getBookings()) {
-            transactions.add(b.getTransaction());
+            if (b.getTransaction() != null) {
+                transactions.add(b.getTransaction());
+            }
         }
         transactionGrid.setItems(transactions);
         transactionGrid.addColumn(Transaction::getType).setHeader("Type");

@@ -2,6 +2,7 @@ package com.battja.accounting.vaadin.details;
 
 import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
+import com.battja.accounting.entities.Booking;
 import com.battja.accounting.services.BatchService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
@@ -76,8 +77,14 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
                 add(createSummaryForm());
                 add(createButtonsLayout());
                 add(new H4("Entries"));
-                add(GridCreator.createBatchEntryGrid(batchEntryList));
+                add(GridCreator.createBatchEntryGrid(batchEntryList,batch.getRegister().requiresEntryReconciliation()));
             }
+            List<Booking> bookings = batchService.getBookings(batch.getId());
+            if(bookings != null && !bookings.isEmpty()) {
+                add(new H4("Bookings"));
+                add(GridCreator.createBookingGrid(bookings));
+            }
+
         }
     }
 
@@ -96,10 +103,18 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
         }
 
         for (Map.Entry<String,Long> entry : currencyMap.entrySet()) {
-            summaryForm.addField("Open / total Amount (" + entry.getKey() + ")",
-                    currencyOpenMap.get(entry.getKey()) + " / " + entry.getValue().toString());
+            if (batch.getRegister().requiresEntryReconciliation()) {
+                summaryForm.addField("Open / total Amount (" + entry.getKey() + ")",
+                        currencyOpenMap.get(entry.getKey()) + " / " + entry.getValue().toString());
+            } else {
+                summaryForm.addField("Total Amount (" + entry.getKey() + ")",entry.getValue().toString());
+            }
         }
-        summaryForm.addField("Open / Closed",openItems +  "/" + batchEntryList.size());
+        if (batch.getRegister().requiresEntryReconciliation()) {
+            summaryForm.addField("Open / Closed", openItems + "/" + batchEntryList.size());
+        } else {
+            summaryForm.addField("# Entries", String.valueOf(batchEntryList.size()));
+        }
         return summaryForm;
     }
 
@@ -120,7 +135,28 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
             closeBatchButton.setEnabled(false);
         }
         buttonsLayout.add(closeBatchButton);
+        if (!batch.getRegister().requiresEntryReconciliation()) {
+            Button bookBalanceTransferButton = new Button("Book Balance Transfer");
+            bookBalanceTransferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            bookBalanceTransferButton.addClickListener(buttonClickEvent -> bookBalanceTransfer());
+            if (!batchService.canBookBalanceTransfer(batch)) {
+                bookBalanceTransferButton.setEnabled(false);
+            }
+            buttonsLayout.add(bookBalanceTransferButton);
+        }
         return buttonsLayout;
+    }
+
+    private void bookBalanceTransfer() {
+        boolean success = batchService.bookBalanceTransfer(batch.getId());
+        if (!success) {
+            Notification notification = new NotificationWithCloseButton("Unable to book balance transfer",false);
+            notification.open();
+            return;
+        }
+        Notification notification = new NotificationWithCloseButton("Balance transfer booked", true);
+        notification.open();
+        updateView();
     }
 
     private void endBatchPeriod() {

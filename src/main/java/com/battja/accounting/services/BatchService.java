@@ -1,20 +1,19 @@
 package com.battja.accounting.services;
 
-import com.battja.accounting.entities.Batch;
-import com.battja.accounting.entities.BatchEntry;
-import com.battja.accounting.entities.Journal;
+import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BatchClosedException;
-import com.battja.accounting.entities.Amount;
+import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.repositories.BatchEntryRepository;
 import com.battja.accounting.repositories.BatchRepository;
-import com.battja.accounting.entities.Booking;
 import com.battja.accounting.repositories.BookingRepository;
+import com.battja.accounting.repositories.JournalRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.*;
 
@@ -80,20 +79,23 @@ public class BatchService {
             }
         }
         // Find available batches
-        List<Batch> batches = batchRepository.findByAccountAndRegisterAndStatus(booking.getAccount(), booking.getRegister(), Batch.BatchStatus.AVAILABLE);
-        if (batches.isEmpty()) {
-            // Create a new batch if none available
-            Integer batchNumber = 0;
-            Batch lastBatch = batchRepository.findFirstByAccountAndRegisterOrderByBatchNumberDesc(booking.getAccount(), booking.getRegister()).orElse(null);
-            if (lastBatch != null) {
-                batchNumber = lastBatch.getBatchNumber();
-            }
-            batchNumber++;
-            Batch batch = new Batch(booking.getAccount(), booking.getRegister(),batchNumber);
-            return batchRepository.save(batch);
-        } else {
+        return findOrCreateAvailableBatch(booking.getAccount(), booking.getRegister());
+    }
+
+    private Batch findOrCreateAvailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
+        List<Batch> batches = batchRepository.findByAccountAndRegisterAndStatus(account, registerType, Batch.BatchStatus.AVAILABLE);
+        if (!batches.isEmpty()) {
             return batches.get(0);
         }
+        // No available batch, we'll create a new one
+        Integer batchNumber = 0;
+        Batch lastBatch = batchRepository.findFirstByAccountAndRegisterOrderByBatchNumberDesc(account, registerType).orElse(null);
+        if (lastBatch != null) {
+            batchNumber = lastBatch.getBatchNumber();
+        }
+        batchNumber++;
+        Batch batch = new Batch(account, registerType,batchNumber);
+        return batchRepository.save(batch);
     }
 
     @Transactional
@@ -103,17 +105,26 @@ public class BatchService {
             log.warn("No batch found with id " + batchId);
             return false;
         }
-        if (batch.getEndDate() != null) {
-            log.warn("Cannot end batch as it was already ended: " + batch);
-            return false;
+        if (batch.getEndDate() == null) {
+            batch.setEndDate(new Date());
         }
         batch.setStatus(Batch.BatchStatus.ENDED);
-        batch.setEndDate(new Date());
         batchRepository.save(batch);
         return true;
     }
 
-    public boolean canBatchClose(@NonNull Batch batch) {
+    public boolean canBookBalanceTransfer(@NonNull Batch batch) {
+        if (batch.getRegister().requiresEntryReconciliation()) {
+            return false;
+        }
+        if (batch.getCloseDate() != null) {
+            return false;
+        }
+        return hasOpenAmounts(batch);
+    }
+
+
+        public boolean canBatchClose(@NonNull Batch batch) {
         if (batch.getCloseDate() != null) {
             return false;
         }
@@ -125,6 +136,10 @@ public class BatchService {
                 }
             }
         }
+        return !hasOpenAmounts(batch);
+    }
+
+    private List<Amount> getOpenAmounts(@NonNull Batch batch) {
         List<Booking> bookings = bookingRepository.findByBatchId(batch.getId());
         Map<String, Long> counterPerCurrency = new HashMap<>();
         for (Booking booking : bookings) {
@@ -135,12 +150,17 @@ public class BatchService {
             counter = counter + booking.getAmount();
             counterPerCurrency.put(booking.getCurrency(), counter);
         }
+        List<Amount> openAmounts = new ArrayList<>();
         for (Map.Entry<String,Long> mapEntry : counterPerCurrency.entrySet()) {
             if (mapEntry.getValue() != 0) {
-                return false;
+                openAmounts.add(new Amount(mapEntry.getKey(), mapEntry.getValue()));
             }
         }
-        return true;
+        return openAmounts;
+    }
+
+    private boolean hasOpenAmounts(@NonNull Batch batch) {
+        return getOpenAmounts(batch).size() != 0;
     }
 
     @Transactional
@@ -164,11 +184,59 @@ public class BatchService {
         }
     }
 
+    @Transactional
+    public boolean bookBalanceTransfer(@NonNull Integer batchId) {
+        Batch batch = batchRepository.findById(batchId).orElse(null);
+        if (batch == null) {
+            log.warn("No batch found with id " + batchId);
+            return false;
+        }
+        List<Amount> openAmounts = getOpenAmounts(batch);
+        if (openAmounts.size() > 0) {
+            if (batch.getStatus().equals(Batch.BatchStatus.AVAILABLE)) {
+                endBatchPeriod(batch.getId());
+            }
+            try {
+                Batch newBatch = findOrCreateAvailableBatch(batch.getAccount(), batch.getRegister());
+                Journal journal = bookBalanceTransfer(batch, newBatch, openAmounts);
+                for (Booking booking : journal.getBookings()) {
+                    booking.setJournal(journal);
+                    bookingRepository.save(booking);
+                    log.info("Created booking " + booking);
+                    updateBatchEntries(booking);
+                }
+                return true;
+            } catch (BookingException e) {
+                log.warn(e.getMessage());
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return false;
+            }
+        } else {
+            log.warn("Cannot book balance transfer: " + batch.getId());
+            return false;
+        }
+    }
+
+    @Transactional
+    private Journal bookBalanceTransfer(@NonNull Batch batchFrom, @NonNull Batch batchTo, @NonNull List<Amount> amounts) {
+        List<Booking> bookings = new ArrayList<>();
+        for (Amount amount : amounts) {
+            log.info("Booking Balance transfer between " + batchFrom.getId() + " and " + batchTo.getId() + ". Amount: " + amount);
+            bookings.add(new Booking(batchFrom.getAccount(),batchFrom.getRegister(),amount.getValue()*-1,amount.getCurrency(),batchFrom,null));
+            bookings.add(new Booking(batchTo.getAccount(),batchTo.getRegister(),amount.getValue(),amount.getCurrency(),batchTo,null));
+        }
+        Journal journal = journalRepository.save(new Journal(bookings, "BalanceTransfer"));
+        log.info("Created journal " + journal);
+        return journal;
+    }
+
     @Autowired
     BatchRepository batchRepository;
     @Autowired
     BatchEntryRepository batchEntryRepository;
     @Autowired
     BookingRepository bookingRepository;
+    @Autowired
+    JournalRepository journalRepository;
 
 }
