@@ -21,14 +21,15 @@ public class Booking {
     @JoinColumn(name = "batch_id")
     private Batch batch;
     private Long amount;
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    private Amount.Currency currency;
     @ManyToOne
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
 
     protected Booking() {}
 
-    public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull String currency,
+    public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull Amount.Currency currency,
                    Batch batch, Transaction transaction) {
         this.account = account;
         this.register = register;
@@ -94,11 +95,11 @@ public class Booking {
         this.amount = amount;
     }
 
-    public String getCurrency() {
+    public Amount.Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Amount.Currency currency) {
         this.currency = currency;
     }
 

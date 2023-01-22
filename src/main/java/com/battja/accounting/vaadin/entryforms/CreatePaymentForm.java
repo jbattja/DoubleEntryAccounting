@@ -31,7 +31,7 @@ public class CreatePaymentForm extends VerticalLayout {
     private Select<Account> merchant;
     private Select<Account> partnerAccount;
     private Select<PaymentMethod> paymentMethod;
-    private Select<String> currency;
+    private Select<Amount.Currency> currency;
     private IntegerField amount;
 
     public CreatePaymentForm(TransactionService transactionService, AccountService accountService) {
@@ -71,8 +71,7 @@ public class CreatePaymentForm extends VerticalLayout {
 
         currency = new Select<>();
         currency.setLabel("Currency");
-        currency.setItems("IDR","PHP","SGD","USD");
-        currency.setValue("IDR");
+        currency.setItems(Amount.Currency.values());
         layout.add(currency);
 
         amount = new IntegerField();

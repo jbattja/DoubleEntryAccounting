@@ -22,7 +22,8 @@ public class BatchEntry {
     @ManyToOne
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    private Amount.Currency currency;
     private Long originalAmount;
     private Long openAmount;
 
@@ -77,11 +78,11 @@ public class BatchEntry {
         this.transaction = transaction;
     }
 
-    public String getCurrency() {
+    public Amount.Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Amount.Currency currency) {
         this.currency = currency;
     }
 

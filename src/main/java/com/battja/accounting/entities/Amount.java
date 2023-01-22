@@ -4,17 +4,17 @@ public class Amount {
 
     public enum Currency{IDR,USD,SGD,MYR,EUR,PHP,THB}
 
-    private String currency;
+    private Currency currency;
     private Long value;
 
     protected Amount() {}
 
-    public Amount(String currency, long value) {
+    public Amount(Currency currency, long value) {
         this.currency = currency;
         this.value = value;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

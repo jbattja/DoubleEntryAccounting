@@ -71,13 +71,13 @@ public class SetupService {
                     case VISA, MASTERCARD -> {
                         fee.setBasisPoints(300);
                         fee.setFixedAmount(20);
-                        fee.setCurrency("PHP");
+                        fee.setCurrency(Amount.Currency.PHP);
                     }
                     case GCASH -> fee.setBasisPoints(250);
                     case GRABPAY -> fee.setBasisPoints(200);
                     case ALFAMART -> {
                         fee.setFixedAmount(4000);
-                        fee.setCurrency("IDR");
+                        fee.setCurrency(Amount.Currency.IDR);
                     }
                 }
             }
@@ -128,6 +128,20 @@ public class SetupService {
             accountService.createAccount(new Account("Visa_Malaysia", Account.AccountType.PARTNER_ACCOUNT, visa));
             accountService.createAccount(new Account("MC_ID", Account.AccountType.PARTNER_ACCOUNT, mc));
             accountService.createAccount(new Account("MC_PH", Account.AccountType.PARTNER_ACCOUNT, mc));
+
+            // SETUP Banks VillageBank, BankOfAsia and IndoBank
+            Account villageBank = accountService.createAccount(new Account("VillageBank", Account.AccountType.BANK));
+            Account bankOfAsia = accountService.createAccount(new Account("BankOfAsia", Account.AccountType.BANK));
+            Account indoBank = accountService.createAccount(new Account("IndoBank", Account.AccountType.BANK));
+
+            accountService.createAccount(new Account("VillageBank-EUR", Account.AccountType.BANK_ACCOUNT, villageBank));
+            accountService.createAccount(new Account("VillageBank-USD", Account.AccountType.BANK_ACCOUNT, villageBank));
+            accountService.createAccount(new Account("VillageBank-SGD", Account.AccountType.BANK_ACCOUNT, villageBank));
+            accountService.createAccount(new Account("BankOfAsia-SGD", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
+            accountService.createAccount(new Account("BankOfAsia-HKD", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
+            accountService.createAccount(new Account("BankOfAsia-PHP", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
+            accountService.createAccount(new Account("IndoBank-IDR", Account.AccountType.BANK_ACCOUNT, indoBank));
+            accountService.createAccount(new Account("IndoBank-USD", Account.AccountType.BANK_ACCOUNT, indoBank));
         } catch (DuplicateNameException e) {
             log.error("Error while creating demo accounts: " + e.getMessage());
         }
@@ -144,7 +158,7 @@ public class SetupService {
             if (currency == Amount.Currency.IDR) {
                 amountValue *= 1000;
             }
-            Amount amount = new Amount(currency.name(), amountValue);
+            Amount amount = new Amount(currency, amountValue);
             Account acquirerAccount = partnerAccounts.get((int) (Math.random() * partnerAccounts.size()));
             Account merchantAccount = merchantAccounts.get((int) (Math.random() * merchantAccounts.size()));
             PaymentMethod paymentMethod = PaymentMethod.values()[(int) (Math.random() * PaymentMethod.values().length)];

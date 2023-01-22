@@ -231,7 +231,7 @@ public class GridCreator {
                             && matches(transaction.getTransactionReference(), reference)
                             && matches(transaction.getPaymentMethod().toString(), paymentMethod)
                             && matches(transaction.getStatus(), status)
-                            && matches((transaction.getCurrency()),currency)
+                            && matches((transaction.getCurrency().toString()),currency)
                             && matches((transaction.getAmount().toString()),amount)
                             && matches((transaction.getPartnerAccount().getAccountName()), partnerAccount)
             );

@@ -28,7 +28,8 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     private Long amount;
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    private Amount.Currency currency;
     private String status;
 
     public Transaction() {}
@@ -104,11 +105,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public String getCurrency() {
+    public Amount.Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Amount.Currency currency) {
         this.currency = currency;
     }
 

@@ -1,5 +1,6 @@
 package com.battja.accounting.vaadin.details;
 
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.entities.Booking;
@@ -94,10 +95,10 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
     private ReadOnlyForm createSummaryForm() {
         ReadOnlyForm summaryForm = new ReadOnlyForm();
         int openItems = 0;
-        Map<String,Long> currencyMap = new HashMap<>();
-        Map<String,Long> currencyOpenMap = new HashMap<>();
+        Map<Amount.Currency,Long> currencyMap = new HashMap<>();
+        Map<Amount.Currency,Long> currencyOpenMap = new HashMap<>();
         for (BatchEntry b : batchEntryList) {
-            String currency = b.getCurrency();
+            Amount.Currency currency = b.getCurrency();
             if (b.getOpenAmount() != 0) {
                 openItems++;
             }
@@ -105,7 +106,7 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
             currencyOpenMap.merge(currency,b.getOpenAmount(),Long::sum);
         }
 
-        for (Map.Entry<String,Long> entry : currencyMap.entrySet()) {
+        for (Map.Entry<Amount.Currency,Long> entry : currencyMap.entrySet()) {
             if (batch.getRegister().requiresEntryReconciliation()) {
                 summaryForm.addField("Open / total Amount (" + entry.getKey() + ")",
                         currencyOpenMap.get(entry.getKey()) + " / " + entry.getValue().toString());

@@ -139,7 +139,7 @@ public class BatchService {
 
     public List<Amount> getOpenAmounts(@NonNull Batch batch) {
         List<Booking> bookings = bookingRepository.findByBatchId(batch.getId());
-        Map<String, Long> counterPerCurrency = new HashMap<>();
+        Map<Amount.Currency, Long> counterPerCurrency = new HashMap<>();
         for (Booking booking : bookings) {
             Long counter = counterPerCurrency.get(booking.getCurrency());
             if (counter == null) {
@@ -149,7 +149,7 @@ public class BatchService {
             counterPerCurrency.put(booking.getCurrency(), counter);
         }
         List<Amount> openAmounts = new ArrayList<>();
-        for (Map.Entry<String,Long> mapEntry : counterPerCurrency.entrySet()) {
+        for (Map.Entry<Amount.Currency,Long> mapEntry : counterPerCurrency.entrySet()) {
             if (mapEntry.getValue() != 0) {
                 openAmounts.add(new Amount(mapEntry.getKey(), mapEntry.getValue()));
             }

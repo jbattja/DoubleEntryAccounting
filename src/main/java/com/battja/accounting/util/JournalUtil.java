@@ -1,5 +1,6 @@
 package com.battja.accounting.util;
 
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.entities.Booking;
 import com.battja.accounting.entities.Journal;
@@ -38,7 +39,7 @@ public class JournalUtil {
     }
 
     public static boolean isBalanced(@NonNull Journal journal) {
-            Map<String,Long> balancePerCurrency = new HashMap<>();
+            Map<Amount.Currency,Long> balancePerCurrency = new HashMap<>();
             for (Booking b : journal.getBookings()) {
                 Long currentBalance = balancePerCurrency.get(b.getCurrency());
                 if (currentBalance == null) {
@@ -46,7 +47,7 @@ public class JournalUtil {
                 }
                 balancePerCurrency.put(b.getCurrency(),b.getAmount()+currentBalance);
             }
-            for (Map.Entry<String,Long> balance : balancePerCurrency.entrySet()) {
+            for (Map.Entry<Amount.Currency,Long> balance : balancePerCurrency.entrySet()) {
                 if (balance.getValue() != 0) {
                     return false;
                 }
