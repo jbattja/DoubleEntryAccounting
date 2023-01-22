@@ -26,9 +26,14 @@ public class BookingService {
 
     @Transactional
     public Journal book(@NonNull Transaction transaction, @NonNull EventType event) {
+        return book(transaction,event,null);
+    }
+
+    @Transactional
+    public Journal book(@NonNull Transaction transaction, @NonNull EventType event, AdditionalInfo additionalInfo) {
         Set<Transaction> transactions = new HashSet<>();
         transactions.add(transaction);
-        return book(transactions,event,null);
+        return book(transactions,event,additionalInfo);
     }
 
     @Transactional
@@ -58,7 +63,9 @@ public class BookingService {
     private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event, AdditionalInfo additionalInfo, @NonNull Map<Account, Fee> fees) throws BookingException {
         event.book(transactions,additionalInfo, fees);
         for (Booking booking : event.getBookings()) { // set batches
-            booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
+            if (booking.getBatch() == null) {
+                booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
+            }
         }
         return storeJournal(new Journal(event.getBookings(), event.getEventTypeName()),transactions);
     }

@@ -8,7 +8,8 @@ public enum RegisterType {
     PAYABLE(false),
     FEES(true),
     REVENUE(false),
-    EARLY_SETTLEMENT(false);
+    EARLY_SETTLEMENT(false),
+    PAYOUTS(true);
 
     private final boolean requiresEntryReconciliation;
 

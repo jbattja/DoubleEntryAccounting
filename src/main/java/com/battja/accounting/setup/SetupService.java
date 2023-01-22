@@ -6,6 +6,7 @@ import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.exceptions.DuplicateNameException;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.FeeService;
+import com.battja.accounting.services.RoutingService;
 import com.battja.accounting.services.TransactionService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -102,7 +103,7 @@ public class SetupService {
             // SETUP Company TechInc
             Account techInc = new Account("TechInc", Account.AccountType.COMPANY);
             techInc = accountService.createAccount(techInc);
-            accountService.createAccount(
+            Account techIncGames = accountService.createAccount(
                     new Account("TechInc_Games", Account.AccountType.MERCHANT, techInc, defaultMerchantContract));
             accountService.createAccount(
                     new Account("TechInc_Ads", Account.AccountType.MERCHANT, techInc, defaultMerchantContract));
@@ -134,14 +135,24 @@ public class SetupService {
             Account bankOfAsia = accountService.createAccount(new Account("BankOfAsia", Account.AccountType.BANK));
             Account indoBank = accountService.createAccount(new Account("IndoBank", Account.AccountType.BANK));
 
-            accountService.createAccount(new Account("VillageBank-EUR", Account.AccountType.BANK_ACCOUNT, villageBank));
-            accountService.createAccount(new Account("VillageBank-USD", Account.AccountType.BANK_ACCOUNT, villageBank));
-            accountService.createAccount(new Account("VillageBank-SGD", Account.AccountType.BANK_ACCOUNT, villageBank));
-            accountService.createAccount(new Account("BankOfAsia-SGD", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
+            Account villageBankEur = accountService.createAccount(new Account("VillageBank-EUR", Account.AccountType.BANK_ACCOUNT, villageBank));
+            Account villageBankUsd = accountService.createAccount(new Account("VillageBank-USD", Account.AccountType.BANK_ACCOUNT, villageBank));
+            Account villageBankSgd = accountService.createAccount(new Account("VillageBank-SGD", Account.AccountType.BANK_ACCOUNT, villageBank));
+            Account bankOfAsiaSgd = accountService.createAccount(new Account("BankOfAsia-SGD", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
             accountService.createAccount(new Account("BankOfAsia-HKD", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
-            accountService.createAccount(new Account("BankOfAsia-PHP", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
-            accountService.createAccount(new Account("IndoBank-IDR", Account.AccountType.BANK_ACCOUNT, indoBank));
-            accountService.createAccount(new Account("IndoBank-USD", Account.AccountType.BANK_ACCOUNT, indoBank));
+            Account bankOfAsiaPhp = accountService.createAccount(new Account("BankOfAsia-PHP", Account.AccountType.BANK_ACCOUNT, bankOfAsia));
+            Account indoBankIdr = accountService.createAccount(new Account("IndoBank-IDR", Account.AccountType.BANK_ACCOUNT, indoBank));
+            Account indoBankUsd = accountService.createAccount(new Account("IndoBank-USD", Account.AccountType.BANK_ACCOUNT, indoBank));
+
+            // Set routing table for settlement
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.EUR,null,villageBankEur));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,techIncGames, Amount.Currency.USD,null,villageBankUsd));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.SGD,null,villageBankSgd));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.SGD,null,bankOfAsiaSgd));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.PHP,null,bankOfAsiaPhp));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.IDR,null,indoBankIdr));
+            routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.USD,null,indoBankUsd));
+
         } catch (DuplicateNameException e) {
             log.error("Error while creating demo accounts: " + e.getMessage());
         }
@@ -200,6 +211,8 @@ public class SetupService {
 
     @Autowired
     AccountService accountService;
+    @Autowired
+    RoutingService routingService;
     @Autowired
     TransactionService transactionService;
     @Autowired

@@ -27,18 +27,18 @@ public class TransactionService {
     String transactionPrefix;
 
     @Transactional
-    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @NonNull Account acquirerAccount) {
+    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @NonNull Account partnerAccount) {
         if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
             log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
             throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
         }
-        if (!acquirerAccount.getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
-            log.warn("Failed to create Payment: not a valid partner account: " + acquirerAccount);
-            throw new IllegalArgumentException("Not a valid partner account: " + acquirerAccount.getAccountName());
+        if (!partnerAccount.getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
+            log.warn("Failed to create Payment: not a valid partner account: " + partnerAccount);
+            throw new IllegalArgumentException("Not a valid partner account: " + partnerAccount.getAccountName());
         }
         Transaction transaction = new Transaction();
         transaction.setMerchantAccount(merchantAccount);
-        transaction.setPartnerAccount(acquirerAccount);
+        transaction.setPartnerAccount(partnerAccount);
         transaction.setPaymentMethod(paymentMethod);
         transaction.setAmount(amount.getValue());
         transaction.setCurrency(amount.getCurrency());
@@ -80,6 +80,29 @@ public class TransactionService {
         transactionSet.add(capture);
         bookingService.book(transactionSet,EventType.PAID);
         return capture;
+    }
+
+    @Transactional
+    public Transaction newWithdrawal(@NonNull Amount amount, @NonNull Account merchantAccount, @NonNull Account bankAccount) {
+        if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
+            log.warn("Failed to create Withdrawal: not a valid merchant account: " + merchantAccount);
+            throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
+        }
+        if (!bankAccount.getAccountType().equals(Account.AccountType.BANK_ACCOUNT)) {
+            log.warn("Failed to create Payment: not a valid partner account: " + bankAccount);
+            throw new IllegalArgumentException("Not a valid partner account: " + bankAccount.getAccountName());
+        }
+        Transaction transaction = new Transaction();
+        transaction.setMerchantAccount(merchantAccount);
+        transaction.setPartnerAccount(bankAccount);
+        transaction.setAmount(amount.getValue());
+        transaction.setCurrency(amount.getCurrency());
+        transaction.setType(Transaction.TransactionType.WITHDRAWAL);
+        transaction.setTransactionReference(createTransactionReference());
+        transaction = transactionRepository.save(transaction);
+
+        log.info("Created transaction: " + transaction);
+        return transaction;
     }
 
     public String createTransactionReference() {
@@ -259,12 +282,47 @@ public class TransactionService {
         }
     }
 
+    @Transactional
+    public boolean withdrawMerchantPayable(@NonNull Integer batchId) {
+        Batch batch = batchService.getBatch(batchId);
+        if (batch == null) {
+            log.warn("No batch found with id " + batchId);
+            return false;
+        }
+        if (!batch.getRegister().equals(RegisterType.PAYABLE) || !batch.getAccount().getAccountType().equals(Account.AccountType.MERCHANT)) {
+            log.warn("Batch is not a merchant payable batch: " + batch);
+            return false;
+        }
+        List<Amount> openAmounts = batchService.getOpenAmounts(batch);
+        if (batch.getStatus().equals(Batch.BatchStatus.AVAILABLE)) {
+            batchService.endBatchPeriod(batch.getId());
+        }
+        List<Journal> journals = new ArrayList<>();
+        for (Amount amount : openAmounts) {
+            Account bankAccount = routingService.getSettlementAccount(batch.getAccount(),amount.getCurrency());
+            if (bankAccount == null) {
+                log.warn("Unable to create a " + amount.getCurrency() + " withdrawal for merchant " + batch.getAccount().getAccountName() + ". No settlement account found.");
+                continue;
+            }
+            Transaction withdrawal = newWithdrawal(amount,batch.getAccount(),bankAccount);
+            AdditionalInfo additionalInfo = new AdditionalInfo();
+            additionalInfo.setFromBatch(batch);
+            journals.add(bookingService.book(withdrawal, EventType.MERCHANT_WITHDRAWAL, additionalInfo));
+        }
+        return journals.size() > 0;
+    }
+
+
     @Autowired
     BatchEntryRepository batchEntryRepository;
     @Autowired
     BookingRepository bookingRepository;
     @Autowired
     BookingService bookingService;
+    @Autowired
+    BatchService batchService;
+    @Autowired
+    RoutingService routingService;
     @Autowired
     TransactionRepository transactionRepository;
 

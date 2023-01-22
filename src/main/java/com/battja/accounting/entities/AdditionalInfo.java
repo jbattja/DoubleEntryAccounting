@@ -6,6 +6,7 @@ package com.battja.accounting.entities;
 public class AdditionalInfo {
 
     private Account fundingSource;
+    private Batch fromBatch;
 
     public AdditionalInfo() {}
 
@@ -15,5 +16,13 @@ public class AdditionalInfo {
 
     public void setFundingSource(Account fundingSource) {
         this.fundingSource = fundingSource;
+    }
+
+    public Batch getFromBatch() {
+        return fromBatch;
+    }
+
+    public void setFromBatch(Batch fromBatch) {
+        this.fromBatch = fromBatch;
     }
 }

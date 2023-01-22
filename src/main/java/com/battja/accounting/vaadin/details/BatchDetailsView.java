@@ -1,11 +1,9 @@
 package com.battja.accounting.vaadin.details;
 
-import com.battja.accounting.entities.Amount;
-import com.battja.accounting.entities.Batch;
-import com.battja.accounting.entities.BatchEntry;
-import com.battja.accounting.entities.Booking;
+import com.battja.accounting.entities.*;
 import com.battja.accounting.services.BatchService;
 import com.battja.accounting.services.BookingService;
+import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
@@ -38,13 +36,15 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
 
     private final BatchService batchService;
     private final BookingService bookingService;
+    private final TransactionService transactionService;
     private Batch batch;
     private Integer batchId;
     private List<BatchEntry> batchEntryList;
 
-    public BatchDetailsView(BatchService batchService, BookingService bookingService) {
+    public BatchDetailsView(BatchService batchService, BookingService bookingService, TransactionService transactionService) {
         this.batchService = batchService;
         this.bookingService = bookingService;
+        this.transactionService = transactionService;
         this.setMargin(false);
     }
 
@@ -148,7 +148,28 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
             }
             buttonsLayout.add(bookBalanceTransferButton);
         }
+        if (batch.getRegister().equals(RegisterType.PAYABLE)) {
+            Button bookWithdrawalButton = new Button("Withdraw payable");
+            bookWithdrawalButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            bookWithdrawalButton.addClickListener(buttonClickEvent -> withdrawPayable());
+            if (!batchService.canBookBalanceTransfer(batch)) {
+                bookWithdrawalButton.setEnabled(false);
+            }
+            buttonsLayout.add(bookWithdrawalButton);
+        }
         return buttonsLayout;
+    }
+
+    private void withdrawPayable() {
+        boolean success = transactionService.withdrawMerchantPayable(batch.getId());
+        if (!success) {
+            Notification notification = new NotificationWithCloseButton("Unable to withdraw payable",false);
+            notification.open();
+            return;
+        }
+        Notification notification = new NotificationWithCloseButton("Booked withdrawal", true);
+        notification.open();
+        updateView();
     }
 
     private void bookBalanceTransfer() {

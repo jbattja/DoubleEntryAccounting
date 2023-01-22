@@ -8,7 +8,8 @@ public enum EventType {
     PAID(PaidEvent.class),
     CANCELLED(CancelEvent.class),
     SETTLED_TO_MERCHANT(SettledToMerchantEvent.class),
-    SETTLEMENT_FAILED(SettlementFailedEvent.class);
+    SETTLEMENT_FAILED(SettlementFailedEvent.class),
+    MERCHANT_WITHDRAWAL(MerchantWithdrawalEvent.class);
 
     private final Class<? extends BookingEvent> eventClass;
 

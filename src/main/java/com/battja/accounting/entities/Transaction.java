@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Entity
 public class Transaction {
 
-    public enum TransactionType {PAYMENT, CAPTURE, REFUND, CHARGEBACK;
+    public enum TransactionType {PAYMENT, CAPTURE, REFUND, CHARGEBACK, WITHDRAWAL;
 
         @Override
         public String toString() {

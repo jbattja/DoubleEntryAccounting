@@ -14,6 +14,9 @@ public abstract class BookingEvent {
     private AdditionalInfo additionalInfo;
     private Map<Account,Fee> fees;
     protected AdditionalInfo getAdditionalInfo() {
+        if (additionalInfo == null) {
+            return new AdditionalInfo();
+        }
         return additionalInfo;
     }
     protected Map<Account,Fee> getFees() {
