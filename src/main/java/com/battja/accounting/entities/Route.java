@@ -33,6 +33,14 @@ public class Route {
         this.targetAccount = targetAccount;
     }
 
+    @Override
+    public String toString() {
+        return String.format(
+                "Route[id=%d, merchant='%s', currency='%s', paymentMethod='%s', targetAccount='%s']",
+                id, merchant.getAccountName(), currency, paymentMethod, targetAccount.getAccountName());
+    }
+
+
     public Integer getId() {
         return id;
     }

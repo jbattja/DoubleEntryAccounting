@@ -4,6 +4,7 @@ import com.battja.accounting.entities.*;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.exceptions.DuplicateNameException;
+import com.battja.accounting.exceptions.UnableToRouteException;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.FeeService;
 import com.battja.accounting.services.RoutingService;
@@ -119,11 +120,14 @@ public class SetupService {
             // SETUP Acquirers OVO, GCash, Visa, MC
             Account ovo = accountService.createAccount(new Account("Ovo", Account.AccountType.PARTNER));
             Account gcash = accountService.createAccount(new Account("Gcash", Account.AccountType.PARTNER));
+            Account grabPay = accountService.createAccount(new Account("GrabPay", Account.AccountType.PARTNER));
             Account visa = accountService.createAccount(new Account("Visa", Account.AccountType.PARTNER));
             Account mc = accountService.createAccount(new Account("Mastercard", Account.AccountType.PARTNER));
+            accountService.createAccount(new Account("Alfamart", Account.AccountType.PARTNER));
 
-            accountService.createAccount(new Account("Ovo_Aggregator", Account.AccountType.PARTNER_ACCOUNT, ovo));
-            accountService.createAccount(new Account("Gcash_Aggregator", Account.AccountType.PARTNER_ACCOUNT, gcash));
+            Account ovoAggr = accountService.createAccount(new Account("Ovo_Aggregator", Account.AccountType.PARTNER_ACCOUNT, ovo));
+            Account gcashAggr = accountService.createAccount(new Account("Gcash_Aggregator", Account.AccountType.PARTNER_ACCOUNT, gcash));
+            accountService.createAccount(new Account("GrabPay_Aggregator", Account.AccountType.PARTNER_ACCOUNT, grabPay));
             accountService.createAccount(new Account("Visa_Indonesia", Account.AccountType.PARTNER_ACCOUNT, visa));
             accountService.createAccount(new Account("Visa_Philippines", Account.AccountType.PARTNER_ACCOUNT, visa));
             accountService.createAccount(new Account("Visa_Malaysia", Account.AccountType.PARTNER_ACCOUNT, visa));
@@ -153,9 +157,41 @@ public class SetupService {
             routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.IDR,null,indoBankIdr));
             routingService.addRoute(new Route(Route.RoutingType.SETTLEMENT,null, Amount.Currency.USD,null,indoBankUsd));
 
+            // Set routing table for payments
+            routingService.addRoute(new Route(Route.RoutingType.PAYMENT,null, Amount.Currency.PHP,PaymentMethod.GCASH,gcashAggr));
+            routingService.addRoute(new Route(Route.RoutingType.PAYMENT,null, Amount.Currency.IDR,PaymentMethod.OVO,ovoAggr));
+            List<Account> merchants = accountService.listAccountsByType(Account.AccountType.MERCHANT);
+            for (Account merchant : merchants) {
+                setDefaultPaymentRoutes(merchant);
+            }
         } catch (DuplicateNameException e) {
             log.error("Error while creating demo accounts: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public void setDefaultPaymentRoutes(Account merchant) throws DuplicateNameException {
+        Account visaId = accountService.getAccount("Visa_Indonesia");
+        Account visaPh = accountService.getAccount("Visa_Philippines");
+        Account visaMy = accountService.getAccount("Visa_Malaysia");
+        Account mcId = accountService.getAccount("MC_ID");
+        Account mcPh = accountService.getAccount("MC_PH");
+        Account grabPay = accountService.getAccount("GrabPay_Aggregator");
+        Account alfa = accountService.getAccount("Alfamart");
+        Account alfaMerch = accountService.createAccount(new Account("Alfamart_" + merchant.getAccountName(), Account.AccountType.PARTNER_ACCOUNT, alfa));
+
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.IDR,PaymentMethod.ALFAMART,alfaMerch));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.IDR,PaymentMethod.VISA,visaId));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.PHP,PaymentMethod.VISA,visaPh));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.MYR,PaymentMethod.VISA,visaMy));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, null,PaymentMethod.VISA,visaId));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.IDR,PaymentMethod.MASTERCARD,mcId));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.PHP,PaymentMethod.MASTERCARD,mcPh));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, null,PaymentMethod.MASTERCARD,mcPh));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.PHP,PaymentMethod.GRABPAY,grabPay));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.SGD,PaymentMethod.GRABPAY,grabPay));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.THB,PaymentMethod.GRABPAY,grabPay));
+        routingService.addRoute(new Route(Route.RoutingType.PAYMENT,merchant, Amount.Currency.MYR,PaymentMethod.GRABPAY,grabPay));
     }
 
     public void createDemoTransactions(int number) throws BookingException {
@@ -163,17 +199,20 @@ public class SetupService {
         List<Account> merchantAccounts = accountService.listAccountsByType(Account.AccountType.MERCHANT);
         log.info("Creating " + number + " random demo transactions");
         List<Transaction> transactionList = new ArrayList<>();
-        for (int i = 0; i < number; i++) {
+        while (transactionList.size() < number) {
             Amount.Currency currency = Amount.Currency.values()[(int) (Math.random() * Amount.Currency.values().length)];
             long amountValue = (long) (Math.random() * 1000);
             if (currency == Amount.Currency.IDR) {
                 amountValue *= 1000;
             }
             Amount amount = new Amount(currency, amountValue);
-            Account acquirerAccount = partnerAccounts.get((int) (Math.random() * partnerAccounts.size()));
             Account merchantAccount = merchantAccounts.get((int) (Math.random() * merchantAccounts.size()));
             PaymentMethod paymentMethod = PaymentMethod.values()[(int) (Math.random() * PaymentMethod.values().length)];
-            transactionList.add(transactionService.newPayment(amount, paymentMethod,merchantAccount,acquirerAccount));
+            try {
+                Transaction payment = transactionService.newPayment(amount, paymentMethod, merchantAccount);
+                transactionList.add(payment);
+            } catch (UnableToRouteException ignored) {
+            }
         }
 
         log.info("Creating random bookings for the demo transactions");

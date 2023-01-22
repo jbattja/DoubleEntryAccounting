@@ -4,6 +4,7 @@ import com.battja.accounting.entities.Account;
 import com.battja.accounting.entities.PaymentMethod;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.entities.Amount;
+import com.battja.accounting.exceptions.UnableToRouteException;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
@@ -29,7 +30,6 @@ public class CreatePaymentForm extends VerticalLayout {
     private final TransactionService transactionService;
     private final AccountService accountService;
     private Select<Account> merchant;
-    private Select<Account> partnerAccount;
     private Select<PaymentMethod> paymentMethod;
     private Select<Amount.Currency> currency;
     private IntegerField amount;
@@ -58,12 +58,6 @@ public class CreatePaymentForm extends VerticalLayout {
         merchant.setRenderer(new TextRenderer<>(Account::getAccountName));
         layout.add(merchant);
 
-        partnerAccount = new Select<>();
-        partnerAccount.setLabel("Partner Account");
-        partnerAccount.setItems(accountService.listAccountsByType(Account.AccountType.PARTNER_ACCOUNT));
-        partnerAccount.setRenderer(new TextRenderer<>(Account::getAccountName));
-        layout.add(partnerAccount);
-
         paymentMethod = new Select<>();
         paymentMethod.setLabel("Payment Method");
         paymentMethod.setItems(PaymentMethod.values());
@@ -82,17 +76,11 @@ public class CreatePaymentForm extends VerticalLayout {
 
     private void createPayment() {
         merchant.setHelperComponent(null);
-        partnerAccount.setHelperComponent(null);
         currency.setHelperComponent(null);
         amount.setHelperComponent(null);
         if(merchant.getValue() == null) {
             merchant.setHelperComponent(new Span("Field is required"));
             merchant.focus();
-            return;
-        }
-        if(partnerAccount.getValue()  == null) {
-            partnerAccount.setHelperComponent(new Span("Field is required"));
-            partnerAccount.focus();
             return;
         }
         if(paymentMethod.getValue()  == null) {
@@ -116,11 +104,11 @@ public class CreatePaymentForm extends VerticalLayout {
             return;
         }
         try {
-            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()),paymentMethod.getValue(), merchant.getValue(), partnerAccount.getValue());
+            Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()),paymentMethod.getValue(), merchant.getValue());
             if (transaction != null) {
                 getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class, String.valueOf(transaction.getId())));
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | UnableToRouteException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);
             notification.open();
         }

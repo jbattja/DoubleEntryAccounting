@@ -37,8 +37,8 @@ public class Transaction {
     @Override
     public String toString() {
         return String.format(
-                "'%s'[id=%d, transactionReference='%s', modificationReference='%s', merchantAccount='%s', acquirerAccount='%s', amount='%s' '%d']",
-                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), partnerAccount.getAccountName(), currency, amount);
+                "'%s'[id=%d, transactionReference='%s', modificationReference='%s', merchantAccount='%s', amount='%s' '%d']",
+                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), currency, amount);
     }
 
     public Integer getId() {

@@ -3,6 +3,7 @@ package com.battja.accounting.services;
 import com.battja.accounting.entities.*;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
+import com.battja.accounting.exceptions.UnableToRouteException;
 import com.battja.accounting.repositories.BatchEntryRepository;
 import com.battja.accounting.repositories.BookingRepository;
 import com.battja.accounting.repositories.TransactionRepository;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,23 +28,36 @@ public class TransactionService {
     @Value("${system.transactionprefix}")
     String transactionPrefix;
 
+
     @Transactional
-    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @NonNull Account partnerAccount) {
+    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount) throws UnableToRouteException {
+        return newPayment(amount,paymentMethod,merchantAccount,null);
+    }
+
+    @Transactional
+    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @Nullable Account partnerAccount) throws UnableToRouteException {
         if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
             log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
             throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
+        }
+        Transaction transaction = new Transaction();
+        transaction.setMerchantAccount(merchantAccount);
+        transaction.setPaymentMethod(paymentMethod);
+        transaction.setAmount(amount.getValue());
+        transaction.setCurrency(amount.getCurrency());
+        transaction.setType(Transaction.TransactionType.PAYMENT);
+        if (partnerAccount == null) {
+            partnerAccount = routingService.getPartnerAccount(merchantAccount,transaction);
+            if (partnerAccount == null) {
+                log.warn("Not able to route payment: " + transaction);
+                throw new UnableToRouteException("Not able to route " + paymentMethod + " payment in " + transaction.getCurrency() + " for merchant " + merchantAccount.getAccountName());
+            }
         }
         if (!partnerAccount.getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
             log.warn("Failed to create Payment: not a valid partner account: " + partnerAccount);
             throw new IllegalArgumentException("Not a valid partner account: " + partnerAccount.getAccountName());
         }
-        Transaction transaction = new Transaction();
-        transaction.setMerchantAccount(merchantAccount);
         transaction.setPartnerAccount(partnerAccount);
-        transaction.setPaymentMethod(paymentMethod);
-        transaction.setAmount(amount.getValue());
-        transaction.setCurrency(amount.getCurrency());
-        transaction.setType(Transaction.TransactionType.PAYMENT);
         transaction.setTransactionReference(createTransactionReference());
         transaction = transactionRepository.save(transaction);
         bookingService.book(transaction, EventType.RECEIVED);
