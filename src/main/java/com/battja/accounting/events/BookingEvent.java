@@ -60,23 +60,6 @@ public abstract class BookingEvent {
             transaction.setStatus(this.getEventTypeName());
         }
         deductFeesFromPayable();
-        checkIfBalanced();
-    }
-
-    private void checkIfBalanced() throws BookingException {
-        Map<String,Long> balancePerCurrency = new HashMap<>();
-        for (Booking b : bookings) {
-            Long currentBalance = balancePerCurrency.get(b.getCurrency());
-            if (currentBalance == null) {
-                currentBalance = 0L;
-            }
-            balancePerCurrency.put(b.getCurrency(),b.getAmount()+currentBalance);
-        }
-        for (Map.Entry<String,Long> balance : balancePerCurrency.entrySet()) {
-            if (balance.getValue() != 0) {
-                throw new BookingException("Booking not balanced out for booking " + getEventTypeName());
-            }
-        }
     }
 
     private void deductFeesFromPayable() {

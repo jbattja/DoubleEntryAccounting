@@ -4,6 +4,7 @@ import com.battja.accounting.entities.Batch;
 import com.battja.accounting.entities.BatchEntry;
 import com.battja.accounting.entities.Booking;
 import com.battja.accounting.services.BatchService;
+import com.battja.accounting.services.BookingService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
@@ -35,12 +36,14 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
     final static Logger log = LoggerFactory.getLogger(BatchDetailsView.class);
 
     private final BatchService batchService;
+    private final BookingService bookingService;
     private Batch batch;
     private Integer batchId;
     private List<BatchEntry> batchEntryList;
 
-    public BatchDetailsView(BatchService batchService) {
+    public BatchDetailsView(BatchService batchService, BookingService bookingService) {
         this.batchService = batchService;
+        this.bookingService = bookingService;
         this.setMargin(false);
     }
 
@@ -148,7 +151,7 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
     }
 
     private void bookBalanceTransfer() {
-        boolean success = batchService.bookBalanceTransfer(batch.getId());
+        boolean success = bookingService.bookBalanceTransfer(batch.getId());
         if (!success) {
             Notification notification = new NotificationWithCloseButton("Unable to book balance transfer",false);
             notification.open();

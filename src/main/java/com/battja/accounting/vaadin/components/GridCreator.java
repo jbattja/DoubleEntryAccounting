@@ -1,6 +1,7 @@
 package com.battja.accounting.vaadin.components;
 
 import com.battja.accounting.entities.*;
+import com.battja.accounting.util.JournalUtil;
 import com.battja.accounting.vaadin.details.*;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -53,7 +54,7 @@ public class GridCreator {
         Grid<BatchEntry> batchEntryGrid = new Grid<>(BatchEntry.class);
         batchEntryGrid.removeAllColumns();
         batchEntryGrid.setItems(batchEntries);
-        batchEntryGrid.addColumn(GridCreator::getReference).setHeader("Reference");
+        batchEntryGrid.addColumn(JournalUtil::getReference).setHeader("Reference");
         batchEntryGrid.addColumn(BatchEntry::getCurrency).setHeader("Currency");
         if (showOpenAndClosed) {
             batchEntryGrid.addColumn(BatchEntry::getOriginalAmount).setHeader("Original amount");
@@ -66,37 +67,16 @@ public class GridCreator {
     }
 
     private static void onBatchEntryClick(ItemClickEvent<BatchEntry> batchEntryItemClickEvent, Grid<BatchEntry> batchEntryGrid) {
-        if (batchEntryItemClickEvent.getItem().getTransaction() == null) {
-            if (batchEntryItemClickEvent.getItem().getJournals() != null && !batchEntryItemClickEvent.getItem().getJournals().isEmpty()) {
-                final Journal journal = new ArrayList<>(batchEntryItemClickEvent.getItem().getJournals()).get(0);
-                batchEntryGrid.getUI().ifPresent(
-                        ui -> ui.navigate(
-                                JournalDetailsView.class,
-                                String.valueOf(journal.getId())
-                        )
-                );
-            }
-        } else {
+        final Journal journal = JournalUtil.getFirstJournal(batchEntryItemClickEvent.getItem());
+        if (journal != null) {
             batchEntryGrid.getUI().ifPresent(
                     ui -> ui.navigate(
-                            batchEntryItemClickEvent.getItem().getTransaction().getType().equals(Transaction.TransactionType.PAYMENT) ? PaymentDetailsView.class : ModificationDetailsView.class,
-                            String.valueOf(batchEntryItemClickEvent.getItem().getTransaction().getId())
+                            JournalDetailsView.class,
+                            String.valueOf(journal.getId())
                     )
             );
         }
     }
-
-    private static String getReference(BatchEntry batchEntry) {
-        if (batchEntry.getTransaction() != null) {
-            return batchEntry.getTransaction().getTransactionReference();
-        }
-        if (batchEntry.getJournals() != null && !batchEntry.getJournals().isEmpty()) {
-            ArrayList<Journal> list = new ArrayList<>(batchEntry.getJournals());
-            return list.get(0).getEventType();
-        }
-        return "";
-    }
-
 
     public static Grid<Account> createAccountGrid(Collection<Account> accounts) {
         Grid<Account> accountGrid = new Grid<>(Account.class);

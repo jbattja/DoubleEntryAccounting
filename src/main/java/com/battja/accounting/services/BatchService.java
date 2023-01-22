@@ -2,18 +2,15 @@ package com.battja.accounting.services;
 
 import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BatchClosedException;
-import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.repositories.BatchEntryRepository;
 import com.battja.accounting.repositories.BatchRepository;
 import com.battja.accounting.repositories.BookingRepository;
-import com.battja.accounting.repositories.JournalRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.*;
 
@@ -82,7 +79,8 @@ public class BatchService {
         return findOrCreateAvailableBatch(booking.getAccount(), booking.getRegister());
     }
 
-    private Batch findOrCreateAvailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
+    public Batch findOrCreateAvailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
+
         List<Batch> batches = batchRepository.findByAccountAndRegisterAndStatus(account, registerType, Batch.BatchStatus.AVAILABLE);
         if (!batches.isEmpty()) {
             return batches.get(0);
@@ -139,7 +137,7 @@ public class BatchService {
         return !hasOpenAmounts(batch);
     }
 
-    private List<Amount> getOpenAmounts(@NonNull Batch batch) {
+    public List<Amount> getOpenAmounts(@NonNull Batch batch) {
         List<Booking> bookings = bookingRepository.findByBatchId(batch.getId());
         Map<String, Long> counterPerCurrency = new HashMap<>();
         for (Booking booking : bookings) {
@@ -184,59 +182,11 @@ public class BatchService {
         }
     }
 
-    @Transactional
-    public boolean bookBalanceTransfer(@NonNull Integer batchId) {
-        Batch batch = batchRepository.findById(batchId).orElse(null);
-        if (batch == null) {
-            log.warn("No batch found with id " + batchId);
-            return false;
-        }
-        List<Amount> openAmounts = getOpenAmounts(batch);
-        if (openAmounts.size() > 0) {
-            if (batch.getStatus().equals(Batch.BatchStatus.AVAILABLE)) {
-                endBatchPeriod(batch.getId());
-            }
-            try {
-                Batch newBatch = findOrCreateAvailableBatch(batch.getAccount(), batch.getRegister());
-                Journal journal = bookBalanceTransfer(batch, newBatch, openAmounts);
-                for (Booking booking : journal.getBookings()) {
-                    booking.setJournal(journal);
-                    bookingRepository.save(booking);
-                    log.info("Created booking " + booking);
-                    updateBatchEntries(booking);
-                }
-                return true;
-            } catch (BookingException e) {
-                log.warn(e.getMessage());
-                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-                return false;
-            }
-        } else {
-            log.warn("Cannot book balance transfer: " + batch.getId());
-            return false;
-        }
-    }
-
-    @Transactional
-    private Journal bookBalanceTransfer(@NonNull Batch batchFrom, @NonNull Batch batchTo, @NonNull List<Amount> amounts) {
-        List<Booking> bookings = new ArrayList<>();
-        for (Amount amount : amounts) {
-            log.info("Booking Balance transfer between " + batchFrom.getId() + " and " + batchTo.getId() + ". Amount: " + amount);
-            bookings.add(new Booking(batchFrom.getAccount(),batchFrom.getRegister(),amount.getValue()*-1,amount.getCurrency(),batchFrom,null));
-            bookings.add(new Booking(batchTo.getAccount(),batchTo.getRegister(),amount.getValue(),amount.getCurrency(),batchTo,null));
-        }
-        Journal journal = journalRepository.save(new Journal(bookings, "BalanceTransfer"));
-        log.info("Created journal " + journal);
-        return journal;
-    }
-
     @Autowired
     BatchRepository batchRepository;
     @Autowired
     BatchEntryRepository batchEntryRepository;
     @Autowired
     BookingRepository bookingRepository;
-    @Autowired
-    JournalRepository journalRepository;
 
 }
