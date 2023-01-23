@@ -43,7 +43,8 @@ public class Booking {
     public String toString() {
         return String.format(
                 "Booking[id=%d, accountName='%s', register='%s', batchNumber='%d', journal='%s', amount='%s' '%d']",
-                id, account.getAccountName(), register, batch.getBatchNumber(), journal.getEventType(), currency, amount);
+                id, account == null ? null : account.getAccountName(), register, batch == null ? null : batch.getBatchNumber(),
+                journal == null ? null : journal.getEventType(), currency, amount);
     }
 
 

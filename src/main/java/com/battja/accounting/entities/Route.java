@@ -37,7 +37,7 @@ public class Route {
     public String toString() {
         return String.format(
                 "Route[id=%d, merchant='%s', currency='%s', paymentMethod='%s', targetAccount='%s']",
-                id, merchant.getAccountName(), currency, paymentMethod, targetAccount.getAccountName());
+                id, merchant == null ? null : merchant.getAccountName(), currency, paymentMethod, targetAccount == null ? null : targetAccount.getAccountName());
     }
 
 

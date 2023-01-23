@@ -49,7 +49,7 @@ public class Batch {
     public String toString() {
         return String.format(
                 "Batch[id=%d, batchNumber='%d', account='%s', register='%s']",
-                id, batchNumber, account.getAccountName(), register);
+                id, batchNumber, account == null ? null : account.getAccountName(), register);
     }
 
 

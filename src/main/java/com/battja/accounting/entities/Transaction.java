@@ -38,7 +38,8 @@ public class Transaction {
     public String toString() {
         return String.format(
                 "'%s'[id=%d, transactionReference='%s', modificationReference='%s', merchantAccount='%s', amount='%s' '%d']",
-                type, id, transactionReference, originalReference, merchantAccount.getAccountName(), currency, amount);
+                type, id, transactionReference, originalReference,
+                merchantAccount == null ? null : merchantAccount.getAccountName(), currency, amount);
     }
 
     public Integer getId() {
