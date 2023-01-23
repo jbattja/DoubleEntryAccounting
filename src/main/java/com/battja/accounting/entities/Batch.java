@@ -1,6 +1,7 @@
 package com.battja.accounting.entities;
 
 import com.battja.accounting.util.CommonUtil;
+import com.battja.accounting.vaadin.components.MultiSelectFilterable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
@@ -10,11 +11,16 @@ import java.util.List;
 @Entity
 public class Batch {
 
-    public enum BatchStatus { CLOSED, AVAILABLE, ENDED;
+    public enum BatchStatus implements MultiSelectFilterable { CLOSED, AVAILABLE, ENDED;
 
         @Override
         public String toString() {
             return CommonUtil.enumNameToString(this.name());
+        }
+
+        @Override
+        public String getFilterName() {
+            return this.toString();
         }
     }
 

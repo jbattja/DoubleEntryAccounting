@@ -19,6 +19,10 @@ public class BatchService {
 
     private static final Logger log = LoggerFactory.getLogger(BatchService.class);
 
+    public List<Batch> listAll() {
+        return batchRepository.findAll();
+    }
+
     public Batch getBatch(Integer id) {
         return batchRepository.findById(id).orElse(null);
     }

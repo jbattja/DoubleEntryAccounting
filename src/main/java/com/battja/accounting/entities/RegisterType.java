@@ -1,6 +1,8 @@
 package com.battja.accounting.entities;
 
-public enum RegisterType {
+import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+
+public enum RegisterType implements MultiSelectFilterable {
 
     RECEIVED(true),
     AUTHORISED(true),
@@ -19,5 +21,10 @@ public enum RegisterType {
 
     public boolean requiresEntryReconciliation() {
         return requiresEntryReconciliation;
+    }
+
+    @Override
+    public String getFilterName() {
+        return this.name();
     }
 }

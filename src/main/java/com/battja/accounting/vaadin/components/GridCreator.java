@@ -8,10 +8,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.ItemClickEvent;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class GridCreator {
 
@@ -91,50 +88,47 @@ public class GridCreator {
         AccountFilter accountFilter = new AccountFilter(dataView);
         accountGrid.getHeaderRows().clear();
         HeaderRow headerRow = accountGrid.appendHeaderRow();
-        headerRow.getCell(accountNameColumn).setComponent(new FilterHeader(accountFilter::setAccountName));
-        headerRow.getCell(accountTypeColumn).setComponent(new FilterHeader(accountFilter::setAccountType));
-        headerRow.getCell(parentColumn).setComponent(new FilterHeader(accountFilter::setParent));
+        headerRow.getCell(accountNameColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setAccountName, accounts));
+        headerRow.getCell(accountTypeColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setAccountType, Arrays.stream(Account.AccountType.values()).toList()));
+        headerRow.getCell(parentColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setParent, accounts));
         return accountGrid;
     }
 
     private static class AccountFilter {
         private final GridListDataView<Account> dataView;
 
-        private String accountName;
-        private String accountType;
-        private String parent;
+        private Set<Account> accounts;
+        private Set<Account.AccountType> accountTypes;
+        private Set<Account> parents;
 
         public AccountFilter(GridListDataView<Account> dataView) {
             this.dataView = dataView;
             this.dataView.setFilter(this::test);
         }
 
-        public void setAccountName(String accountName) {
-            this.accountName = accountName;
+        public void setAccountName(Set<Account> accounts) {
+            this.accounts = accounts;
             this.dataView.refreshAll();
         }
 
-        public void setAccountType(String accountType) {
-            this.accountType = accountType;
+        public void setAccountType(Set<Account.AccountType>  accountTypes) {
+            this.accountTypes = accountTypes;
             this.dataView.refreshAll();
         }
 
-        public void setParent(String parent) {
-            this.parent = parent;
+        public void setParent(Set<Account> parents) {
+            this.parents = parents;
             this.dataView.refreshAll();
         }
 
         public boolean test(Account account) {
-            return (
-                    matches(account.getAccountName(), accountName)
-                            && matches(account.getAccountType().toString(),accountType)
-                            && matches(getParentName(account),parent)
-            );
-        }
-
-        private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty()
-                    || value.toLowerCase().contains(searchTerm.toLowerCase());
+            if(accounts != null && !accounts.isEmpty() && !accounts.contains(account)) {
+                return false;
+            }
+            if(parents != null && !parents.isEmpty() && !parents.contains(account.getParent())) {
+                return false;
+            }
+            return accountTypes == null || accountTypes.isEmpty() || accountTypes.contains(account.getAccountType());
         }
     }
 
@@ -159,14 +153,23 @@ public class GridCreator {
 
         TransactionFilter transactionFilter = new TransactionFilter(dataView);
         grid.getHeaderRows().clear();
+        Set<Account> merchantAccounts = new HashSet<>();
+        Set<Account> partnerAccounts = new HashSet<>();
+        Set<SelectableString> statuses = new HashSet<>();
+        for (Transaction payment : payments) {
+            merchantAccounts.add(payment.getMerchantAccount());
+            statuses.add(new SelectableString(payment.getStatus()));
+            partnerAccounts.add(payment.getPartnerAccount());
+        }
+
         HeaderRow headerRow = grid.appendHeaderRow();
-        headerRow.getCell(merchantColumn).setComponent(new FilterHeader(transactionFilter::setMerchant));
+        headerRow.getCell(merchantColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setMerchant,merchantAccounts));
         headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
-        headerRow.getCell(paymentMethod).setComponent(new FilterHeader(transactionFilter::setPaymentMethod));
-        headerRow.getCell(statusColumn).setComponent(new FilterHeader(transactionFilter::setStatus));
-        headerRow.getCell(currencyColumn).setComponent(new FilterHeader(transactionFilter::setCurrency));
+        headerRow.getCell(paymentMethod).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPaymentMethod, Arrays.stream(PaymentMethod.values()).toList()));
+        headerRow.getCell(statusColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setStatus,statuses));
+        headerRow.getCell(currencyColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setCurrency, Arrays.stream(Amount.Currency.values()).toList()));
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
-        headerRow.getCell(acquirerAccountColumn).setComponent(new FilterHeader(transactionFilter::setPartnerAccount));
+        headerRow.getCell(acquirerAccountColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPartnerAccount,partnerAccounts));
 
         grid.addItemClickListener(transactionItemClickEvent -> grid.getUI().ifPresent(
                 ui -> ui.navigate(PaymentDetailsView.class,String.valueOf(transactionItemClickEvent.getItem().getId()))
@@ -177,21 +180,21 @@ public class GridCreator {
     public static class TransactionFilter {
         private final GridListDataView<Transaction> dataView;
 
-        private String merchant;
+        private Set<Account> merchants;
         private String reference;
-        private String paymentMethod;
-        private String status;
-        private String currency;
+        private Set<PaymentMethod> paymentMethods;
+        private Set<SelectableString> status;
+        private Set<Amount.Currency> currencies;
         private String amount;
-        private String partnerAccount;
+        private Set<Account> partnerAccounts;
 
         public TransactionFilter(GridListDataView<Transaction> dataView) {
             this.dataView = dataView;
             this.dataView.setFilter(this::test);
         }
 
-        public void setMerchant(String merchant) {
-            this.merchant = merchant;
+        public void setMerchant(Set<Account> merchants) {
+            this.merchants = merchants;
             this.dataView.refreshAll();
         }
 
@@ -200,18 +203,18 @@ public class GridCreator {
             this.dataView.refreshAll();
         }
 
-        public void setPaymentMethod(String paymentMethod) {
-            this.paymentMethod = paymentMethod;
+        public void setPaymentMethod(Set<PaymentMethod> paymentMethods) {
+            this.paymentMethods = paymentMethods;
             this.dataView.refreshAll();
         }
 
-        public void setStatus(String status) {
+        public void setStatus(Set<SelectableString> status) {
             this.status = status;
             this.dataView.refreshAll();
         }
 
-        public void setCurrency(String currency) {
-            this.currency = currency;
+        public void setCurrency(Set<Amount.Currency> currencies) {
+            this.currencies = currencies;
             this.dataView.refreshAll();
         }
 
@@ -220,20 +223,30 @@ public class GridCreator {
             this.dataView.refreshAll();
         }
 
-        public void setPartnerAccount(String partnerAccount) {
-            this.partnerAccount = partnerAccount;
+        public void setPartnerAccount(Set<Account> partnerAccounts) {
+            this.partnerAccounts = partnerAccounts;
             this.dataView.refreshAll();
         }
 
         public boolean test(Transaction transaction) {
+            if(merchants != null && !merchants.isEmpty() && !merchants.contains(transaction.getMerchantAccount())) {
+                return false;
+            }
+            if(paymentMethods != null && !paymentMethods.isEmpty() && !paymentMethods.contains(transaction.getPaymentMethod())) {
+                return false;
+            }
+            if(currencies != null && !currencies.isEmpty() && !currencies.contains(transaction.getCurrency())) {
+                return false;
+            }
+            if(status != null && !status.isEmpty() && !status.contains(new SelectableString(transaction.getStatus()))) {
+                return false;
+            }
+            if(partnerAccounts != null && !partnerAccounts.isEmpty() && !partnerAccounts.contains(transaction.getPartnerAccount())) {
+                return false;
+            }
             return (
-                    matches(transaction.getMerchantAccount().getAccountName(), merchant)
-                            && matches(transaction.getTransactionReference(), reference)
-                            && matches(transaction.getPaymentMethod().toString(), paymentMethod)
-                            && matches(transaction.getStatus(), status)
-                            && matches((transaction.getCurrency().toString()),currency)
+                            matches(transaction.getTransactionReference(), reference)
                             && matches((transaction.getAmount().toString()),amount)
-                            && matches((transaction.getPartnerAccount().getAccountName()), partnerAccount)
             );
         }
 

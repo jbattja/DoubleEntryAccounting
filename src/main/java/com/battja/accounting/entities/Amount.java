@@ -1,8 +1,18 @@
 package com.battja.accounting.entities;
 
+import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+
 public class Amount {
 
-    public enum Currency{IDR,USD,SGD,MYR,EUR,PHP,THB}
+    public enum Currency implements MultiSelectFilterable
+
+    {IDR,USD,SGD,MYR,EUR,PHP,THB;
+
+        @Override
+        public String getFilterName() {
+            return this.name();
+        }
+    }
 
     private Currency currency;
     private Long value;

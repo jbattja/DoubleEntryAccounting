@@ -1,16 +1,22 @@
 package com.battja.accounting.entities;
 
 import com.battja.accounting.util.CommonUtil;
+import com.battja.accounting.vaadin.components.MultiSelectFilterable;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 @Entity
-public class Account {
+public class Account implements MultiSelectFilterable {
 
     public final static Integer DEFAULT_PSP_ACCOUNT_ID = 1;
     public final static String DEFAULT_PSP_ACCOUNT_NAME = "BattjaPay";
 
-    public enum AccountType {
+    @Override
+    public String getFilterName() {
+        return getAccountName();
+    }
+
+    public enum AccountType implements MultiSelectFilterable {
         PSP(null), PARTNER(PSP), PARTNER_ACCOUNT(PARTNER), COMPANY(PSP), MERCHANT(COMPANY), BANK(PSP), BANK_ACCOUNT(BANK);
         final AccountType parent;
         AccountType(AccountType parent) {
@@ -35,6 +41,10 @@ public class Account {
             return false;
         }
 
+        @Override
+        public String getFilterName() {
+            return toString();
+        }
     }
 
     @Id
