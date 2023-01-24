@@ -73,6 +73,28 @@ public class AccountService {
         return account;
     }
 
+    @Transactional
+    public Account updateAccount(@NonNull Account account) throws DuplicateNameException {
+        if (account.getAccountName() == null) {
+            log.warn("Tried to update an account without specifying account name");
+            return null;
+        }
+        Account existingAccount = getAccount(account.getId());
+        if (!existingAccount.getAccountName().equals(account.getAccountName())) {
+            if (getAccount(account.getAccountName()) != null) {
+                log.warn("Cannot update account: account with name " + account.getAccountName() + " already exists");
+                throw new DuplicateNameException("Account with name " + account.getAccountName() + " already exists");
+            }
+        }
+        existingAccount.setAccountName(account.getAccountName());
+        if (account.getContract() != null && !account.getContract().equals(existingAccount.getContract())) {
+            existingAccount.setContract(account.getContract());
+        }
+        accountRepository.save(existingAccount);
+        log.info("Account updated:" + account);
+        return existingAccount;
+    }
+
     @Autowired
     AccountRepository accountRepository;
 

@@ -1,9 +1,9 @@
 package com.battja.accounting.vaadin.components;
 
-public record SelectableString(String string) implements MultiSelectFilterable {
+public record SelectableString(String string) implements DisplayableEntity {
 
     @Override
-    public String getFilterName() {
+    public String getDisplayName() {
         return string;
     }
 

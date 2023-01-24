@@ -8,7 +8,7 @@ import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
-import com.battja.accounting.vaadin.components.ReadOnlyForm;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H3;
@@ -94,8 +94,8 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
         );
     }
 
-    private ReadOnlyForm createDetailsForm() {
-        ReadOnlyForm detailsForm = new ReadOnlyForm();
+    private CustomDetailsForm createDetailsForm() {
+        CustomDetailsForm detailsForm = new CustomDetailsForm();
         detailsForm.addField("Type", modification.getType().toString());
         detailsForm.addField("Reference", modification.getOriginalReference());
         detailsForm.addField("Payment Reference", modification.getTransactionReference());

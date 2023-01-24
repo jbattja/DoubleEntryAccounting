@@ -1,22 +1,22 @@
 package com.battja.accounting.entities;
 
 import com.battja.accounting.util.CommonUtil;
-import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+import com.battja.accounting.vaadin.components.DisplayableEntity;
 import jakarta.persistence.*;
 import org.springframework.lang.NonNull;
 
 @Entity
-public class Account implements MultiSelectFilterable {
+public class Account implements DisplayableEntity {
 
     public final static Integer DEFAULT_PSP_ACCOUNT_ID = 1;
     public final static String DEFAULT_PSP_ACCOUNT_NAME = "BattjaPay";
 
     @Override
-    public String getFilterName() {
+    public String getDisplayName() {
         return getAccountName();
     }
 
-    public enum AccountType implements MultiSelectFilterable {
+    public enum AccountType implements DisplayableEntity {
         PSP(null), PARTNER(PSP), PARTNER_ACCOUNT(PARTNER), COMPANY(PSP), MERCHANT(COMPANY), BANK(PSP), BANK_ACCOUNT(BANK);
         final AccountType parent;
         AccountType(AccountType parent) {
@@ -42,7 +42,7 @@ public class Account implements MultiSelectFilterable {
         }
 
         @Override
-        public String getFilterName() {
+        public String getDisplayName() {
             return toString();
         }
     }
@@ -97,16 +97,32 @@ public class Account implements MultiSelectFilterable {
         return accountName;
     }
 
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
     public AccountType getAccountType() {
         return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
     }
 
     public Account getParent() {
         return parent;
     }
 
+    public void setParent(Account parent) {
+        this.parent = parent;
+    }
+
     public Contract getContract() {
         return contract;
+    }
+
+    public void setContract(Contract contract) {
+        this.contract = contract;
     }
 
     @Override

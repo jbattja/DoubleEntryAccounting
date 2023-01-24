@@ -6,7 +6,7 @@ import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.services.JournalService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
-import com.battja.accounting.vaadin.components.ReadOnlyForm;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
@@ -66,8 +66,8 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
         }
     }
 
-    private ReadOnlyForm createDetailsView() {
-        ReadOnlyForm form = new ReadOnlyForm();
+    private CustomDetailsForm createDetailsView() {
+        CustomDetailsForm form = new CustomDetailsForm();
         form.addField("Event type", journal.getEventType());
         form.addField("Date", journal.getDate().toString());
         return form;

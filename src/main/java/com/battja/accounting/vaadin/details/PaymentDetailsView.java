@@ -9,7 +9,7 @@ import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
-import com.battja.accounting.vaadin.components.ReadOnlyForm;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -83,8 +83,8 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
         }
     }
 
-    private ReadOnlyForm createDetailsForm() {
-        ReadOnlyForm detailsForm = new ReadOnlyForm();
+    private CustomDetailsForm createDetailsForm() {
+        CustomDetailsForm detailsForm = new CustomDetailsForm();
         detailsForm.addField("Reference", payment.getTransactionReference());
         detailsForm.addField("Amount", payment.getCurrency() + " " + payment.getAmount());
         detailsForm.addField("Payment Method", payment.getPaymentMethod().toString());

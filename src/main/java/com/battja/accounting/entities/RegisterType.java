@@ -1,8 +1,8 @@
 package com.battja.accounting.entities;
 
-import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+import com.battja.accounting.vaadin.components.DisplayableEntity;
 
-public enum RegisterType implements MultiSelectFilterable {
+public enum RegisterType implements DisplayableEntity {
 
     RECEIVED(true),
     AUTHORISED(true),
@@ -24,7 +24,7 @@ public enum RegisterType implements MultiSelectFilterable {
     }
 
     @Override
-    public String getFilterName() {
+    public String getDisplayName() {
         return this.name();
     }
 }

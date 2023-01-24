@@ -1,15 +1,15 @@
 package com.battja.accounting.entities;
 
-import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+import com.battja.accounting.vaadin.components.DisplayableEntity;
 
 public class Amount {
 
-    public enum Currency implements MultiSelectFilterable
+    public enum Currency implements DisplayableEntity
 
     {IDR,USD,SGD,MYR,EUR,PHP,THB;
 
         @Override
-        public String getFilterName() {
+        public String getDisplayName() {
             return this.name();
         }
     }

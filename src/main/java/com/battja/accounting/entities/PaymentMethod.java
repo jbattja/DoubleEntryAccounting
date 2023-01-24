@@ -1,9 +1,9 @@
 package com.battja.accounting.entities;
 
 import com.battja.accounting.util.CommonUtil;
-import com.battja.accounting.vaadin.components.MultiSelectFilterable;
+import com.battja.accounting.vaadin.components.DisplayableEntity;
 
-public enum PaymentMethod implements MultiSelectFilterable {
+public enum PaymentMethod implements DisplayableEntity {
 
     VISA, MASTERCARD, OVO, GRABPAY, GCASH, ALFAMART;
 
@@ -13,7 +13,7 @@ public enum PaymentMethod implements MultiSelectFilterable {
     }
 
     @Override
-    public String getFilterName() {
+    public String getDisplayName() {
         return this.toString();
     }
 }

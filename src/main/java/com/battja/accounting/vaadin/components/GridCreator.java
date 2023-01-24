@@ -87,10 +87,18 @@ public class GridCreator {
 
         AccountFilter accountFilter = new AccountFilter(dataView);
         accountGrid.getHeaderRows().clear();
+        Set<Account> parents = new HashSet<>();
+        Set<Account.AccountType> accountTypes = new HashSet<>();
+        for (Account a : accounts) {
+            if (a.getParent() != null) {
+                parents.add(a.getParent());
+            }
+            accountTypes.add(a.getAccountType());
+        }
         HeaderRow headerRow = accountGrid.appendHeaderRow();
         headerRow.getCell(accountNameColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setAccountName, accounts));
-        headerRow.getCell(accountTypeColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setAccountType, Arrays.stream(Account.AccountType.values()).toList()));
-        headerRow.getCell(parentColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setParent, accounts));
+        headerRow.getCell(accountTypeColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setAccountType, accountTypes));
+        headerRow.getCell(parentColumn).setComponent(new MultiSelectFilterHeader<>(accountFilter::setParent, parents));
         return accountGrid;
     }
 
@@ -155,9 +163,13 @@ public class GridCreator {
         grid.getHeaderRows().clear();
         Set<Account> merchantAccounts = new HashSet<>();
         Set<Account> partnerAccounts = new HashSet<>();
+        Set<PaymentMethod> paymentMethods = new HashSet<>();
+        Set<Amount.Currency> currencies = new HashSet<>();
         Set<SelectableString> statuses = new HashSet<>();
         for (Transaction payment : payments) {
             merchantAccounts.add(payment.getMerchantAccount());
+            paymentMethods.add(payment.getPaymentMethod());
+            currencies.add(payment.getCurrency());
             statuses.add(new SelectableString(payment.getStatus()));
             partnerAccounts.add(payment.getPartnerAccount());
         }
@@ -165,9 +177,9 @@ public class GridCreator {
         HeaderRow headerRow = grid.appendHeaderRow();
         headerRow.getCell(merchantColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setMerchant,merchantAccounts));
         headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
-        headerRow.getCell(paymentMethod).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPaymentMethod, Arrays.stream(PaymentMethod.values()).toList()));
+        headerRow.getCell(paymentMethod).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPaymentMethod, paymentMethods));
         headerRow.getCell(statusColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setStatus,statuses));
-        headerRow.getCell(currencyColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setCurrency, Arrays.stream(Amount.Currency.values()).toList()));
+        headerRow.getCell(currencyColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setCurrency, currencies));
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
         headerRow.getCell(acquirerAccountColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPartnerAccount,partnerAccounts));
 

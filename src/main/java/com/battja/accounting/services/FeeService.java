@@ -24,6 +24,10 @@ public class FeeService {
         return amounts;
     }
 
+    public List<Contract> listAllContracts() {
+        return contractRepository.findAll();
+    }
+
     public Contract storeContract(Contract contract) {
         for (Fee fee : contract.getFees()) {
             fee.setContract(contract);

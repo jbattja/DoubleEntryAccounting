@@ -7,7 +7,7 @@ import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
-import com.battja.accounting.vaadin.components.ReadOnlyForm;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H3;
@@ -65,7 +65,7 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
         if (batch != null) {
             add(new H3("Batch Details"));
 
-            ReadOnlyForm form = new ReadOnlyForm();
+            CustomDetailsForm form = new CustomDetailsForm();
             form.addField("Account",batch.getAccount().getAccountName());
             form.addField("Register",batch.getRegister().toString());
             form.addField("Batch number",batch.getBatchNumber().toString());
@@ -92,8 +92,8 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
         }
     }
 
-    private ReadOnlyForm createSummaryForm() {
-        ReadOnlyForm summaryForm = new ReadOnlyForm();
+    private CustomDetailsForm createSummaryForm() {
+        CustomDetailsForm summaryForm = new CustomDetailsForm();
         int openItems = 0;
         Map<Amount.Currency,Long> currencyMap = new HashMap<>();
         Map<Amount.Currency,Long> currencyOpenMap = new HashMap<>();
