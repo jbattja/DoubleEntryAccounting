@@ -80,6 +80,10 @@ public class AccountService {
             return null;
         }
         Account existingAccount = getAccount(account.getId());
+        if (existingAccount == null) {
+            log.warn("Cannot update account: existing account not found");
+            return null;
+        }
         if (!existingAccount.getAccountName().equals(account.getAccountName())) {
             if (getAccount(account.getAccountName()) != null) {
                 log.warn("Cannot update account: account with name " + account.getAccountName() + " already exists");
@@ -91,7 +95,7 @@ public class AccountService {
             existingAccount.setContract(account.getContract());
         }
         accountRepository.save(existingAccount);
-        log.info("Account updated:" + account);
+        log.info("Account updated:" + existingAccount);
         return existingAccount;
     }
 

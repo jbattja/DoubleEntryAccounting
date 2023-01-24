@@ -73,7 +73,6 @@ public class BatchDetailsView extends VerticalLayout implements HasUrlParameter<
             form.addField("Open Date",batch.getOpenDate().toString());
             form.addField("End Date",batch.getEndDate() != null ? batch.getEndDate().toString() : "");
             form.addField("Close Date",batch.getCloseDate() != null ? batch.getCloseDate().toString() : "");
-
             add(form);
             batchEntryList = batchService.getEntries(batch.getId());
             if (batchEntryList != null) {

@@ -28,7 +28,6 @@ public class GridCreator {
         bookingGrid.addItemClickListener(bookingItemClickEvent -> bookingGrid.getUI().ifPresent(
                 ui -> ui.navigate(BatchDetailsView.class,String.valueOf(bookingItemClickEvent.getItem().getBatch().getId()))
         ));
-
         return bookingGrid;
     }
 
@@ -45,6 +44,22 @@ public class GridCreator {
                 ui -> ui.navigate(JournalDetailsView.class,String.valueOf(journalItemClickEvent.getItem().getId()))
         ));
         return journalGrid;
+    }
+
+    public static Grid<Fee> createFeeGrid(Collection<Fee> feeLines) {
+        Grid<Fee> feeGrid = new Grid<>(Fee.class);
+        feeGrid.removeAllColumns();
+        feeGrid.setItems(feeLines);
+        feeGrid.addColumn(fee -> fee.getEventType().toString()).setHeader("Event");
+        feeGrid.addColumn(Fee::getPaymentMethod).setHeader("PaymentMethod");
+        feeGrid.addColumn(Fee::getCurrency).setHeader("Currency");
+        feeGrid.addColumn(Fee::getFixedAmount).setHeader("Fixed amount");
+        feeGrid.addColumn(Fee::getBasisPoints).setHeader("Basis points");
+        feeGrid.addItemClickListener(feeItemClickEvent -> feeGrid.getUI().ifPresent(
+                ui -> ui.navigate(FeeDetailsView.class,String.valueOf(feeItemClickEvent.getItem().getId())
+        )));
+        feeGrid.setAllRowsVisible(true);
+        return feeGrid;
     }
 
     public static Grid<BatchEntry> createBatchEntryGrid(Collection<BatchEntry> batchEntries, boolean showOpenAndClosed) {
@@ -147,20 +162,138 @@ public class GridCreator {
         return "";
     }
 
-    public static Grid<Transaction> createPaymentsGrid(Collection<Transaction> payments) {
-        Grid<Transaction> grid = new Grid<>(Transaction.class);
-        GridListDataView<Transaction> dataView = grid.setItems(payments);
+    public static Grid<Batch> createBatchesGrid(Collection<Batch> batches) {
+        Grid<Batch> batchesGrid = new Grid<>(Batch.class);
+        GridListDataView<Batch> dataView = batchesGrid.setItems(batches);
+        batchesGrid.removeAllColumns();
+        Grid.Column<Batch> accountNameColumn = batchesGrid.addColumn(batch -> batch.getAccount().getAccountName()).setHeader("Account");
+        Grid.Column<Batch> registerColumn = batchesGrid.addColumn(Batch::getRegister).setHeader("Register");
+        Grid.Column<Batch> batchNumberColumn = batchesGrid.addColumn(Batch::getBatchNumber).setHeader("Number");
+        Grid.Column<Batch> statusColumn = batchesGrid.addColumn(batch -> batch.getStatus().toString()).setHeader("Status");
+        batchesGrid.addColumn(Batch::getOpenDate).setHeader("Open Date");
+        batchesGrid.addColumn(Batch::getCloseDate).setHeader("Close Date");
+
+        batchesGrid.addItemClickListener(batchItemClickEvent -> batchesGrid.getUI().ifPresent(
+                ui -> ui.navigate(BatchDetailsView.class,String.valueOf(batchItemClickEvent.getItem().getId()))
+        ));
+
+        BatchFilter batchFilter = new BatchFilter(dataView);
+        batchesGrid.getHeaderRows().clear();
+        Set<Account> accountList = new HashSet<>();
+        for (Batch batch : batches) {
+            accountList.add(batch.getAccount());
+        }
+        HeaderRow headerRow = batchesGrid.appendHeaderRow();
+        headerRow.getCell(accountNameColumn).setComponent(new MultiSelectFilterHeader<>(batchFilter::setAccountName,accountList));
+        headerRow.getCell(registerColumn).setComponent(new MultiSelectFilterHeader<>(batchFilter::setRegister, Arrays.stream(RegisterType.values()).toList()));
+        headerRow.getCell(batchNumberColumn).setComponent(new FilterHeader(batchFilter::setBatchNumber));
+        headerRow.getCell(statusColumn).setComponent(new MultiSelectFilterHeader<>(batchFilter::setStatus, Arrays.stream(Batch.BatchStatus.values()).toList()));
+        return batchesGrid;
+    }
+
+    public static class BatchFilter {
+        private final GridListDataView<Batch> dataView;
+
+        private Set<Integer> accountIds;
+        private Set<RegisterType> registers;
+        private String batchNumber;
+        private Set<Batch.BatchStatus> statuses;
+
+        public BatchFilter(GridListDataView<Batch> dataView) {
+            this.dataView = dataView;
+            this.dataView.setFilter(this::test);
+        }
+
+        public void setAccountName(Set<Account> accounts) {
+            accountIds = new HashSet<>();
+            for (Account account : accounts) {
+                accountIds.add(account.getId());
+            }
+            this.dataView.refreshAll();
+        }
+
+        public void setRegister(Set<RegisterType> registers) {
+            this.registers = registers;
+            this.dataView.refreshAll();
+        }
+
+        public void setBatchNumber(String batchNumber) {
+            this.batchNumber = batchNumber;
+            this.dataView.refreshAll();
+        }
+
+        public void setStatus(Set<Batch.BatchStatus> statuses) {
+            this.statuses = statuses;
+            this.dataView.refreshAll();
+        }
+
+        public boolean test(Batch batch) {
+            if(accountIds != null && !accountIds.isEmpty() && !accountIds.contains(batch.getAccount().getId())) {
+                return false;
+            }
+            if(registers != null && !registers.isEmpty() && !registers.contains(batch.getRegister())) {
+                return false;
+            }
+            if(statuses != null && !statuses.isEmpty() && !statuses.contains(batch.getStatus())) {
+                return false;
+            }
+            return (
+                    matches(batch.getBatchNumber().toString(),batchNumber)
+            );
+        }
+    }
+
+    public static Grid<Contract> createContractsGrid(Collection<Contract> contracts) {
+        Grid<Contract> grid = new Grid<>(Contract.class);
+        GridListDataView<Contract> dataView = grid.setItems(contracts);
         grid.removeAllColumns();
-        Grid.Column<Transaction> merchantColumn = grid.addColumn(transaction -> transaction.getMerchantAccount().getAccountName()).setHeader("Merchant");
-        Grid.Column<Transaction> referenceColumn = grid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
-        Grid.Column<Transaction> paymentMethod =  grid.addColumn(Transaction::getPaymentMethod).setHeader("Payment Method");
-        Grid.Column<Transaction> statusColumn =  grid.addColumn(Transaction::getStatus).setHeader("Status");
-        Grid.Column<Transaction> currencyColumn = grid.addColumn(Transaction::getCurrency).setHeader("Currency");
-        Grid.Column<Transaction> amountColumn = grid.addColumn(Transaction::getAmount).setHeader("Amount");
-        Grid.Column<Transaction> acquirerAccountColumn = grid.addColumn(transaction -> transaction.getPartnerAccount().getAccountName()).setHeader("Partner Account");
+        Grid.Column<Contract> contractColumn = grid.addColumn(Contract::getContractName).setHeader("Contract");
+        // TODO make a date filter
+        Grid.Column<Contract> startDateColumn = grid.addColumn(Contract::getStartDate).setHeader("Start Date");
+        ContractFilter contractFilter = new ContractFilter(dataView);
+
+        HeaderRow headerRow = grid.appendHeaderRow();
+        headerRow.getCell(contractColumn).setComponent(new FilterHeader(contractFilter::setContractName));
+        grid.addItemClickListener(contractItemClickEvent -> grid.getUI().ifPresent(
+                ui -> ui.navigate(ContractDetailsView.class,String.valueOf(contractItemClickEvent.getItem().getId()))
+        ));
+        return grid;
+    }
+
+    public static class ContractFilter {
+        private final GridListDataView<Contract> dataView;
+
+        private String contractName;
+
+        public ContractFilter(GridListDataView<Contract> dataView) {
+            this.dataView = dataView;
+            this.dataView.setFilter(this::test);
+        }
+
+        public void setContractName(String contractName) {
+            this.contractName = contractName;
+            this.dataView.refreshAll();
+        }
+
+        private boolean test(Contract contract) {
+            return matches(contract.getContractName(),contractName);
+        }
+    }
+
+    public static Grid<Transaction> createPaymentsGrid(Collection<Transaction> payments) {
+        Grid<Transaction> paymentsGrid = new Grid<>(Transaction.class);
+        GridListDataView<Transaction> dataView = paymentsGrid.setItems(payments);
+        paymentsGrid.removeAllColumns();
+        Grid.Column<Transaction> merchantColumn = paymentsGrid.addColumn(transaction -> transaction.getMerchantAccount().getAccountName()).setHeader("Merchant");
+        Grid.Column<Transaction> referenceColumn = paymentsGrid.addColumn(Transaction::getTransactionReference).setHeader("Reference");
+        Grid.Column<Transaction> paymentMethod =  paymentsGrid.addColumn(Transaction::getPaymentMethod).setHeader("Payment Method");
+        Grid.Column<Transaction> statusColumn =  paymentsGrid.addColumn(Transaction::getStatus).setHeader("Status");
+        Grid.Column<Transaction> currencyColumn = paymentsGrid.addColumn(Transaction::getCurrency).setHeader("Currency");
+        Grid.Column<Transaction> amountColumn = paymentsGrid.addColumn(Transaction::getAmount).setHeader("Amount");
+        Grid.Column<Transaction> acquirerAccountColumn = paymentsGrid.addColumn(transaction -> transaction.getPartnerAccount().getAccountName()).setHeader("Partner Account");
 
         TransactionFilter transactionFilter = new TransactionFilter(dataView);
-        grid.getHeaderRows().clear();
+        paymentsGrid.getHeaderRows().clear();
         Set<Account> merchantAccounts = new HashSet<>();
         Set<Account> partnerAccounts = new HashSet<>();
         Set<PaymentMethod> paymentMethods = new HashSet<>();
@@ -174,7 +307,7 @@ public class GridCreator {
             partnerAccounts.add(payment.getPartnerAccount());
         }
 
-        HeaderRow headerRow = grid.appendHeaderRow();
+        HeaderRow headerRow = paymentsGrid.appendHeaderRow();
         headerRow.getCell(merchantColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setMerchant,merchantAccounts));
         headerRow.getCell(referenceColumn).setComponent(new FilterHeader(transactionFilter::setReference));
         headerRow.getCell(paymentMethod).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPaymentMethod, paymentMethods));
@@ -183,10 +316,10 @@ public class GridCreator {
         headerRow.getCell(amountColumn).setComponent(new FilterHeader(transactionFilter::setAmount));
         headerRow.getCell(acquirerAccountColumn).setComponent(new MultiSelectFilterHeader<>(transactionFilter::setPartnerAccount,partnerAccounts));
 
-        grid.addItemClickListener(transactionItemClickEvent -> grid.getUI().ifPresent(
+        paymentsGrid.addItemClickListener(transactionItemClickEvent -> paymentsGrid.getUI().ifPresent(
                 ui -> ui.navigate(PaymentDetailsView.class,String.valueOf(transactionItemClickEvent.getItem().getId()))
         ));
-        return grid;
+        return paymentsGrid;
     }
 
     public static class TransactionFilter {
@@ -261,12 +394,12 @@ public class GridCreator {
                             && matches((transaction.getAmount().toString()),amount)
             );
         }
-
-        private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty()
-                    || value.toLowerCase().contains(searchTerm.toLowerCase());
-        }
-
     }
+
+    private static boolean matches(String value, String searchTerm) {
+        return searchTerm == null || searchTerm.isEmpty()
+                || value.toLowerCase().contains(searchTerm.toLowerCase());
+    }
+
 
 }

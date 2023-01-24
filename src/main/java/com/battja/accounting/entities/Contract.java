@@ -19,7 +19,6 @@ public class Contract implements DisplayableEntity {
     private Integer id;
     private String contractName;
     private Date startDate;
-    private Date endDate;
     @OneToMany(mappedBy = "contract")
     private List<Fee> fees;
 
@@ -50,9 +49,6 @@ public class Contract implements DisplayableEntity {
         if (startDate != null) {
             result = 31 * startDate.hashCode() + result;
         }
-        if (endDate != null) {
-            result = 31 * endDate.hashCode() + result;
-        }
         return result;
     }
 
@@ -81,13 +77,6 @@ public class Contract implements DisplayableEntity {
         } else if (!this.startDate.equals(other.getStartDate())) {
             return false;
         }
-        if (this.endDate == null) {
-            if (other.endDate != null) {
-                return false;
-            }
-        } else if (!this.endDate.equals(other.getEndDate())) {
-            return false;
-        }
         return this.id.equals(other.getId());
     }
 
@@ -113,14 +102,6 @@ public class Contract implements DisplayableEntity {
 
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
-    }
-
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
     }
 
     public List<Fee> getFees() {

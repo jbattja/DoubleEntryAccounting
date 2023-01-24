@@ -6,15 +6,15 @@ import com.battja.accounting.exceptions.DuplicateNameException;
 import com.battja.accounting.services.AccountService;
 import com.battja.accounting.services.FeeService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
+import com.battja.accounting.vaadin.components.EditSaveCancelButtonsLayout;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
-import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.battja.accounting.vaadin.entryforms.CreateAccountForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -61,7 +61,7 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
         if (account != null) {
             add(new H3("Account: " + account.getAccountName()));
             add(createDetailsView());
-            add(createButtonsLayout());
+            add(new EditSaveCancelButtonsLayout<>(form, account, this::save));
             Collection<Account> children = accountService.listChildren(account);
             if (!children.isEmpty()) {
                 add(new H4("Child Accounts"));
@@ -96,44 +96,7 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
         return form;
     }
 
-    private Button editButton;
-    private Button saveButton;
-    private Button cancelButton;
-
-    private HorizontalLayout createButtonsLayout() {
-        HorizontalLayout buttonsLayout = new HorizontalLayout();
-        editButton = new Button("Edit");
-        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        editButton.addClickListener(buttonClickEvent -> edit());
-        buttonsLayout.add(editButton);
-        cancelButton = new Button("Cancel");
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        cancelButton.addClickListener(buttonClickEvent -> cancel());
-        cancelButton.setVisible(false);
-        buttonsLayout.add(cancelButton);
-        saveButton = new Button("Save");
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.addClickListener(buttonClickEvent -> save());
-        saveButton.setVisible(false);
-        buttonsLayout.add(saveButton);
-        return buttonsLayout;
-    }
-
-    private void edit() {
-        form.setEditable(true);
-        editButton.setVisible(false);
-        cancelButton.setVisible(true);
-        saveButton.setVisible(true);
-    }
-
-    private void cancel() {
-        form.setEditable(false);
-        editButton.setVisible(true);
-        cancelButton.setVisible(false);
-        saveButton.setVisible(false);
-    }
-
-    private void save() {
+    private Boolean save(Account account) {
         account.setAccountName(accountNameField.getValue());
         account.setContract(contractSelect.getValue());
         try {
@@ -141,15 +104,18 @@ public class AccountDetailsView extends VerticalLayout implements HasUrlParamete
             if (updatedAccount == null) {
                 NotificationWithCloseButton notification = new NotificationWithCloseButton("Unable to update account",false);
                 notification.open();
+                return false;
             } else {
                 NotificationWithCloseButton notification = new NotificationWithCloseButton("Account updated",true);
                 notification.open();
                 updateView();
+                return true;
             }
         } catch (DuplicateNameException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);
             notification.open();
         }
+        return false;
     }
 
 }

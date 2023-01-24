@@ -84,7 +84,7 @@ public class SetupService {
                 }
             }
             defaultMerchantContract.setFees(fees);
-            feeService.storeContract(defaultMerchantContract);
+            feeService.createContract(defaultMerchantContract);
         } catch (DuplicateNameException e) {
             log.error("Error during initial setup: " + e.getMessage());
         }
@@ -195,7 +195,6 @@ public class SetupService {
     }
 
     public void createDemoTransactions(int number) throws BookingException {
-        List<Account> partnerAccounts = accountService.listAccountsByType(Account.AccountType.PARTNER_ACCOUNT);
         List<Account> merchantAccounts = accountService.listAccountsByType(Account.AccountType.MERCHANT);
         log.info("Creating " + number + " random demo transactions");
         List<Transaction> transactionList = new ArrayList<>();

@@ -13,6 +13,7 @@ import com.battja.accounting.vaadin.details.PaymentDetailsView;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -41,8 +42,8 @@ public class CreatePaymentForm extends VerticalLayout {
     }
 
     private void updateView() {
+        add(new H3("Create Payment"));
         add(createInputForm());
-
         Button createPaymentButton = new Button("Create");
         createPaymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createPaymentButton.addClickListener(buttonClickEvent -> createPayment());
@@ -106,7 +107,12 @@ public class CreatePaymentForm extends VerticalLayout {
         try {
             Transaction transaction = transactionService.newPayment(new Amount(currency.getValue(), amount.getValue()),paymentMethod.getValue(), merchant.getValue());
             if (transaction != null) {
+                NotificationWithCloseButton notification = new NotificationWithCloseButton("Created new payment",true);
+                notification.open();
                 getUI().ifPresent(ui -> ui.navigate(PaymentDetailsView.class, String.valueOf(transaction.getId())));
+            } else {
+                NotificationWithCloseButton notification = new NotificationWithCloseButton("Unable to create payment",false);
+                notification.open();
             }
         } catch (IllegalArgumentException | UnableToRouteException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);

@@ -3,6 +3,7 @@ package com.battja.accounting.vaadin.components;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -19,6 +20,17 @@ public class CustomDetailsForm extends FormLayout {
         add(field);
         return field;
     }
+
+    public IntegerField addEditableIntegerField(String label, Integer value) {
+        IntegerField field = new IntegerField();
+        field.setLabel(label);
+        field.setValue(value);
+        field.setReadOnly(true);
+        field.setClassName("allow-edits");
+        add(field);
+        return field;
+    }
+
 
     public <T extends DisplayableEntity> Select<T> addSelectableField(String label, T value, Collection<T> items) {
         Select<T> field = new Select<>();
@@ -58,6 +70,11 @@ public class CustomDetailsForm extends FormLayout {
             if (childView instanceof TextField) {
                 if (((TextField) childView).getClassName() != null && ((TextField) childView).getClassName().contains("allow-edits")) {
                     ((TextField) childView).setReadOnly(!editable);
+                }
+            }
+            if (childView instanceof IntegerField) {
+                if (((IntegerField) childView).getClassName() != null && ((IntegerField) childView).getClassName().contains("allow-edits")) {
+                    ((IntegerField) childView).setReadOnly(!editable);
                 }
             }
             if (childView instanceof Select) {

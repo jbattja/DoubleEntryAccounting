@@ -10,6 +10,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -53,6 +54,7 @@ public class CreateAccountForm extends VerticalLayout implements HasUrlParameter
     }
 
     private void updateView() {
+        add(new H3("Create Account"));
         add(createInputForm());
         Button createAccountButton = new Button("Create");
         createAccountButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -128,7 +130,12 @@ public class CreateAccountForm extends VerticalLayout implements HasUrlParameter
         try {
             Account finalAccount = accountService.createAccount(account);
             if (finalAccount != null) {
+                NotificationWithCloseButton notification = new NotificationWithCloseButton("Created new account",true);
+                notification.open();
                 getUI().ifPresent(ui -> ui.navigate(AccountDetailsView.class, String.valueOf(finalAccount.getId())));
+            } else {
+                NotificationWithCloseButton notification = new NotificationWithCloseButton("Unable to create account",false);
+                notification.open();
             }
         } catch (DuplicateNameException e) {
             NotificationWithCloseButton notification = new NotificationWithCloseButton(e.getMessage(),false);

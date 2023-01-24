@@ -2,6 +2,7 @@ package com.battja.accounting.vaadin;
 
 import com.battja.accounting.vaadin.lists.AccountList;
 import com.battja.accounting.vaadin.lists.BatchList;
+import com.battja.accounting.vaadin.lists.ContractList;
 import com.battja.accounting.vaadin.lists.PaymentsList;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -51,6 +52,9 @@ public class MainLayout extends AppLayout {
         RouterLink transactionsList = new RouterLink("Payments", PaymentsList.class);
         transactionsList.setHighlightCondition(HighlightConditions.sameLocation());
         addToDrawer(new VerticalLayout(transactionsList));
+        RouterLink contractsList = new RouterLink("Contracts", ContractList.class);
+        transactionsList.setHighlightCondition(HighlightConditions.sameLocation());
+        addToDrawer(new VerticalLayout(contractsList));
     }
 
 }

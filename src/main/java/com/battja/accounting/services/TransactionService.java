@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,14 +27,8 @@ public class TransactionService {
     @Value("${system.transactionprefix}")
     String transactionPrefix;
 
-
     @Transactional
     public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount) throws UnableToRouteException {
-        return newPayment(amount,paymentMethod,merchantAccount,null);
-    }
-
-    @Transactional
-    public Transaction newPayment(@NonNull Amount amount, @NonNull PaymentMethod paymentMethod, @NonNull Account merchantAccount, @Nullable Account partnerAccount) throws UnableToRouteException {
         if (!merchantAccount.getAccountType().equals(Account.AccountType.MERCHANT)) {
             log.warn("Failed to create Payment: not a valid merchant account: " + merchantAccount);
             throw new IllegalArgumentException("Not a valid merchant account: " + merchantAccount.getAccountName());
@@ -46,12 +39,10 @@ public class TransactionService {
         transaction.setAmount(amount.getValue());
         transaction.setCurrency(amount.getCurrency());
         transaction.setType(Transaction.TransactionType.PAYMENT);
+        Account partnerAccount = routingService.getPartnerAccount(merchantAccount,transaction);
         if (partnerAccount == null) {
-            partnerAccount = routingService.getPartnerAccount(merchantAccount,transaction);
-            if (partnerAccount == null) {
-                log.warn("Not able to route payment: " + transaction);
-                throw new UnableToRouteException("Not able to route " + paymentMethod + " payment in " + transaction.getCurrency() + " for merchant " + merchantAccount.getAccountName());
-            }
+            log.warn("Not able to route payment: " + transaction);
+            throw new UnableToRouteException("Not able to route " + paymentMethod + " payment in " + transaction.getCurrency() + " for merchant " + merchantAccount.getAccountName());
         }
         if (!partnerAccount.getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
             log.warn("Failed to create Payment: not a valid partner account: " + partnerAccount);

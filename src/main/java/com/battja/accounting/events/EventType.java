@@ -1,6 +1,9 @@
 package com.battja.accounting.events;
 
-public enum EventType {
+import com.battja.accounting.util.CommonUtil;
+import com.battja.accounting.vaadin.components.DisplayableEntity;
+
+public enum EventType implements DisplayableEntity {
 
     RECEIVED(ReceivedEvent.class),
     AUTHORISED(AuthorisedEvent.class),
@@ -11,6 +14,11 @@ public enum EventType {
     SETTLEMENT_FAILED(SettlementFailedEvent.class),
     MERCHANT_WITHDRAWAL(MerchantWithdrawalEvent.class);
 
+    @Override
+    public String toString() {
+        return CommonUtil.enumNameToString(this.name());
+    }
+
     private final Class<? extends BookingEvent> eventClass;
 
     EventType(Class<? extends BookingEvent> eventClass) {
@@ -19,5 +27,10 @@ public enum EventType {
 
     public Class<? extends BookingEvent> getEventClass() {
         return eventClass;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return this.toString();
     }
 }
