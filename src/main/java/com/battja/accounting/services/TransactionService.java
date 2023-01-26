@@ -129,6 +129,10 @@ public class TransactionService {
         return journals;
     }
 
+    public List<Booking> getBookingsByTransactions(List<Transaction> transactions) {
+        return bookingRepository.findByTransactionIn(transactions);
+    }
+
     public List<Booking> getBookingsByTransaction(Transaction transaction) {
         return bookingRepository.findByTransaction(transaction);
     }

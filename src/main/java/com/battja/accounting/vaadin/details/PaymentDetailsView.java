@@ -1,15 +1,15 @@
 package com.battja.accounting.vaadin.details;
 
+import com.battja.accounting.entities.Amount;
 import com.battja.accounting.entities.Booking;
 import com.battja.accounting.entities.Journal;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.entities.Amount;
 import com.battja.accounting.services.TransactionService;
 import com.battja.accounting.vaadin.MainLayout;
+import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.battja.accounting.vaadin.components.GridCreator;
 import com.battja.accounting.vaadin.components.NotificationWithCloseButton;
-import com.battja.accounting.vaadin.components.CustomDetailsForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -27,6 +27,7 @@ import com.vaadin.flow.router.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -75,7 +76,9 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
                 add(new H4("Journals"));
                 add(GridCreator.createJournalGrid(journals));
             }
-            List<Booking> bookings = transactionService.getBookingsByTransaction(payment);
+            List<Transaction> paymentAndModifications = new ArrayList<>(modifications);
+            paymentAndModifications.add(payment);
+            List<Booking> bookings = transactionService.getBookingsByTransactions(paymentAndModifications);
             if (!bookings.isEmpty()) {
                 add(new H4("Bookings"));
                 add(GridCreator.createBookingGrid(bookings));
@@ -210,19 +213,6 @@ public class PaymentDetailsView extends VerticalLayout implements HasUrlParamete
                 ui -> ui.navigate(ModificationDetailsView.class,String.valueOf(itemClickEvent.getItem().getId()))
         ));
         return modificationGrid;
-    }
-
-    private Grid<Journal> createJournalsGrid() {
-        Grid<Journal> journalGrid = new Grid<>(Journal.class);
-        journalGrid.removeAllColumns();
-        journalGrid.setItems(transactionService.getJournalsByTransaction(payment));
-        journalGrid.addColumn(Journal::getDate).setHeader("Date");
-        journalGrid.addColumn(Journal::getEventType).setHeader("Event");
-        journalGrid.setAllRowsVisible(true);
-        journalGrid.addItemClickListener(journalItemClickEvent -> journalGrid.getUI().ifPresent(
-                ui -> ui.navigate(JournalDetailsView.class,String.valueOf(journalItemClickEvent.getItem().getId()))
-        ));
-        return journalGrid;
     }
 
 }

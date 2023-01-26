@@ -100,8 +100,13 @@ public abstract class BookingEvent {
             List<Amount> calculatedFees =  FeeService.calculateFee(fee.getValue(),getCreditAmount(transaction));
             for (Amount amount : calculatedFees) {
                 if (amount.getValue() != 0) {
-                    addBooking(fee.getKey(),RegisterType.FEES,new Amount(amount.getCurrency(),amount.getValue()*-1),transaction);
-                    addBooking(Account.defaultPspAccount(),RegisterType.REVENUE,new Amount(amount.getCurrency(),amount.getValue()),transaction);
+                    if (fee.getKey() !=null && fee.getKey().getAccountType().equals(Account.AccountType.MERCHANT)) {
+                        addBooking(fee.getKey(), RegisterType.FEES, new Amount(amount.getCurrency(), amount.getValue() * -1), transaction);
+                        addBooking(Account.defaultPspAccount(), RegisterType.REVENUE, new Amount(amount.getCurrency(), amount.getValue()), transaction);
+                    } else if (fee.getKey() !=null && fee.getKey().getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
+                        addBooking(fee.getKey(), RegisterType.REVENUE, new Amount(amount.getCurrency(), amount.getValue()), transaction);
+                        addBooking(Account.defaultPspAccount(), RegisterType.FEES, new Amount(amount.getCurrency(), amount.getValue() * -1), transaction);
+                    }
                 }
             }
         }

@@ -145,7 +145,14 @@ public class BookingService {
             return feeMap;
         }
         for (Account account : accounts) {
-            List<Fee> possibleFees = feeService.getFeeLines(account.getContract(), eventType);
+            Contract contract = account.getContract();
+            if (contract == null && account.getParent() != null) {
+                contract = account.getParent().getContract();
+            }
+            if (contract == null) {
+                continue;
+            }
+            List<Fee> possibleFees = feeService.getFeeLines(contract, eventType);
             if (possibleFees.isEmpty()) {
                 continue;
             }
