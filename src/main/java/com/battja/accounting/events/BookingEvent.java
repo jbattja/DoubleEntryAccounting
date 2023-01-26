@@ -4,6 +4,7 @@ import com.battja.accounting.entities.*;
 import com.battja.accounting.exceptions.BookingException;
 import com.battja.accounting.services.FeeService;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import java.util.*;
 
@@ -11,15 +12,18 @@ public abstract class BookingEvent {
 
     private final List<Booking> bookings;
     private Set <Transaction> transactions;
-    private AdditionalInfo additionalInfo;
+    private ReportLine reportLine;
+    private Collection <Batch> batches;
+    private AdditionalBookingInfo additionalBookingInfo;
     private Map<Account,Fee> fees;
-    protected AdditionalInfo getAdditionalInfo() {
-        if (additionalInfo == null) {
-            return new AdditionalInfo();
-        }
-        return additionalInfo;
+
+    protected AdditionalBookingInfo getAdditionalInfo() {
+        return additionalBookingInfo;
     }
     protected Map<Account,Fee> getFees() {
+        if (fees == null) {
+            return new HashMap<>();
+        }
         return fees;
     }
 
@@ -51,13 +55,19 @@ public abstract class BookingEvent {
         return true;
     }
 
-    public void book(@NonNull Set<Transaction> transactions, @NonNull AdditionalInfo additionalInfo, @NonNull Map<Account, Fee> fees) throws BookingException {
-        if (!validateTransactions(transactions)) {
+    public void book(@NonNull AdditionalBookingInfo additionalBookingInfo, @Nullable Collection<Batch> batches) throws BookingException {
+        this.additionalBookingInfo = additionalBookingInfo;
+        if (this.additionalBookingInfo.getTransactions() == null) {
+            this.transactions = new HashSet<>();
+        } else {
+            this.transactions = this.additionalBookingInfo.getTransactions();
+        }
+        if (!validateTransactions(this.transactions)) {
             throw new BookingException("Incorrect input of transactions for this BookingEvent " + getEventTypeName());
         }
-        this.transactions = transactions;
-        this.additionalInfo = additionalInfo;
-        this.fees = fees;
+        this.reportLine = this.additionalBookingInfo.getReportLine();
+        this.fees = this.additionalBookingInfo.getFees();
+        this.batches = batches;
         bookInternal();
         for (Transaction transaction : transactions) {
             transaction.setStatus(this.getEventTypeName());
@@ -80,7 +90,7 @@ public abstract class BookingEvent {
         long deductionAmount = 0;
         List<Booking> bookingsToInvert = new ArrayList<>();
         for (Booking booking : bookings) {
-            if (RegisterType.FEES.equals(booking.getRegister()) && payableBooking.getAccount().equals(booking.getAccount())
+            if (RegisterType.FEES.equals(booking.getRegister()) && payableBooking.getAccount().getId().equals(booking.getAccount().getId())
                     && payableBooking.getCurrency().equals(booking.getCurrency())) {
                 deductionAmount += booking.getAmount();
                 bookingsToInvert.add(booking);
@@ -112,10 +122,28 @@ public abstract class BookingEvent {
         }
     }
 
+    protected Batch findBatch(@NonNull Account account, @NonNull RegisterType registerType) {
+        if (batches == null || batches.isEmpty()) {
+            return null;
+        }
+        for (Batch b: batches) {
+            if (b.getAccount() == null) {
+                continue;
+            }
+            if (b.getRegister().equals(registerType) && b.getAccount().getId().equals(account.getId())) {
+                return b;
+            }
+        }
+        return null;
+    }
+
     protected abstract void bookInternal() throws BookingException;
 
     protected void addBooking(@NonNull Account account, @NonNull RegisterType register, @NonNull Amount amount, Transaction transaction) {
-        bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), null, transaction));
+        bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), findBatch(account,register), transaction));
+    }
+    protected void addBooking(@NonNull Account account, @NonNull RegisterType register, @NonNull Amount amount, ReportLine reportLine) {
+        bookings.add(new Booking(account, register, amount.getValue(),amount.getCurrency(), findBatch(account,register), reportLine));
     }
 
     protected Amount getCreditAmount(Transaction transaction) {
@@ -126,6 +154,14 @@ public abstract class BookingEvent {
         return new Amount(transaction.getCurrency(),transaction.getAmount()*-1);
     }
 
+    protected Amount getCreditAmount(ReportLine reportLine) {
+        return new Amount(reportLine.getCurrency(),reportLine.getGrossAmount());
+    }
+
+    protected Amount getDebitAmount(ReportLine reportLine) {
+        return new Amount(reportLine.getCurrency(),reportLine.getGrossAmount()*-1);
+    }
+
     protected Transaction getTransaction(Transaction.TransactionType type) throws BookingException {
         for (Transaction transaction : transactions) {
             if (transaction.getType().equals(type)) {
@@ -133,6 +169,10 @@ public abstract class BookingEvent {
             }
         }
         throw new BookingException("Internal booking error: no transaction with transaction type " + type + " found");
+    }
+
+    protected ReportLine getReportLine() {
+        return reportLine;
     }
 
 

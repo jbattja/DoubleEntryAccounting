@@ -19,9 +19,6 @@ public class MerchantWithdrawalEvent extends BookingEvent {
     protected void bookInternal() throws BookingException {
         Transaction settlement = getTransaction(Transaction.TransactionType.WITHDRAWAL);
         addBooking(settlement.getMerchantAccount(), RegisterType.PAYABLE, getDebitAmount(settlement), settlement);
-        if (getAdditionalInfo().getFromBatch() != null) {
-            getBookings().get(0).setBatch(getAdditionalInfo().getFromBatch());
-        }
         addBooking(settlement.getPartnerAccount(), RegisterType.PAYOUTS, getCreditAmount(settlement), settlement);
     }
 }

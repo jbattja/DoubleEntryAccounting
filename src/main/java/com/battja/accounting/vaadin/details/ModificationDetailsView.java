@@ -100,6 +100,7 @@ public class ModificationDetailsView extends VerticalLayout implements HasUrlPar
         detailsForm.addField("Reference", modification.getOriginalReference());
         detailsForm.addField("Payment Reference", modification.getTransactionReference());
         detailsForm.addField("Amount", modification.getCurrency() + " " + modification.getAmount());
+        detailsForm.addField("Payment Method", modification.getPaymentMethod().toString());
         detailsForm.addField("Status", modification.getStatus());
         detailsForm.addClickableField("Merchant", modification.getMerchantAccount().getAccountName(),
                 AccountDetailsView.class,String.valueOf(modification.getMerchantAccount().getId()));

@@ -84,7 +84,6 @@ public class BatchService {
     }
 
     public Batch findOrCreateAvailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
-
         List<Batch> batches = batchRepository.findByAccountAndRegisterAndStatus(account, registerType, Batch.BatchStatus.AVAILABLE);
         if (!batches.isEmpty()) {
             return batches.get(0);
@@ -97,7 +96,24 @@ public class BatchService {
         }
         batchNumber++;
         Batch batch = new Batch(account, registerType,batchNumber);
-        return batchRepository.save(batch);
+        batch =  batchRepository.save(batch);
+        log.info("Created batch: " + batch);
+        return batch;
+    }
+
+    public Batch createNewUnavailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
+        Integer batchNumber = 0;
+        Batch lastBatch = batchRepository.findFirstByAccountAndRegisterOrderByBatchNumberDesc(account, registerType).orElse(null);
+        if (lastBatch != null) {
+            batchNumber = lastBatch.getBatchNumber();
+        }
+        batchNumber++;
+        Batch batch = new Batch(account, registerType,batchNumber);
+        batch.setStatus(Batch.BatchStatus.ENDED);
+        batch.setEndDate(new Date());
+        batch =  batchRepository.save(batch);
+        log.info("Created batch: " + batch);
+        return batch;
     }
 
     @Transactional

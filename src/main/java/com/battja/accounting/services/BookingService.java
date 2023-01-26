@@ -30,19 +30,30 @@ public class BookingService {
     }
 
     @Transactional
-    public Journal book(@NonNull Transaction transaction, @NonNull EventType event, AdditionalInfo additionalInfo) {
+    public Journal book(@NonNull Transaction transaction, @NonNull EventType event, Collection<Batch> batchesToUse) {
         Set<Transaction> transactions = new HashSet<>();
         transactions.add(transaction);
-        return book(transactions,event,additionalInfo);
+        AdditionalBookingInfo additionalBookingInfo = new AdditionalBookingInfo();
+        additionalBookingInfo.setTransactions(transactions);
+        return book(event,additionalBookingInfo,batchesToUse);
     }
 
     @Transactional
     public Journal book(@NonNull Set<Transaction> transactions, @NonNull EventType event) {
-        return book(transactions,event,null);
+        AdditionalBookingInfo additionalBookingInfo = new AdditionalBookingInfo();
+        additionalBookingInfo.setTransactions(transactions);
+        return book(event,additionalBookingInfo,null);
     }
 
     @Transactional
-    public Journal book(@NonNull Set<Transaction> transactions, @NonNull EventType event, AdditionalInfo additionalInfo) {
+    public Journal book(@NonNull ReportLine reportLine, @NonNull EventType event, Collection<Batch> batchesToUse) {
+        AdditionalBookingInfo additionalBookingInfo = new AdditionalBookingInfo();
+        additionalBookingInfo.setReportLine(reportLine);
+        return book(event,additionalBookingInfo,batchesToUse);
+    }
+
+    @Transactional
+    public Journal book(@NonNull EventType event, @Nullable AdditionalBookingInfo additionalBookingInfo, Collection<Batch> batchesToUse) {
         BookingEvent bookingEvent;
         try {
             bookingEvent = event.getEventClass().getDeclaredConstructor().newInstance();
@@ -50,9 +61,12 @@ public class BookingService {
             log.warn(e.getMessage());
             return null;
         }
+        if (additionalBookingInfo == null) {
+            additionalBookingInfo = new AdditionalBookingInfo();
+        }
         try {
-            Map<Account,Fee> fees = findFees(transactions,event);
-            return bookInternal(transactions,bookingEvent, additionalInfo, fees);
+            findFees(additionalBookingInfo,event);
+            return bookInternal(bookingEvent, additionalBookingInfo, batchesToUse);
         } catch (BookingException e) {
             log.error(e.getMessage());
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
@@ -60,14 +74,14 @@ public class BookingService {
         }
     }
 
-    private Journal bookInternal(@NonNull Set<Transaction> transactions, @NonNull BookingEvent event, AdditionalInfo additionalInfo, @NonNull Map<Account, Fee> fees) throws BookingException {
-        event.book(transactions,additionalInfo, fees);
+    private Journal bookInternal(@NonNull BookingEvent event, @NonNull AdditionalBookingInfo additionalBookingInfo, Collection<Batch> batchesToUse) throws BookingException {
+        event.book(additionalBookingInfo,batchesToUse);
         for (Booking booking : event.getBookings()) { // set batches
             if (booking.getBatch() == null) {
                 booking.setBatch(batchService.findOrCreateAvailableBatch(booking));
             }
         }
-        return storeJournal(new Journal(event.getBookings(), event.getEventTypeName()),transactions);
+        return storeJournal(new Journal(event.getBookings(), event.getEventTypeName()),additionalBookingInfo);
     }
 
     @Transactional
@@ -103,14 +117,14 @@ public class BookingService {
         List<Booking> bookings = new ArrayList<>();
         for (Amount amount : amounts) {
             log.info("Booking Balance transfer between " + batchFrom.getId() + " and " + batchTo.getId() + ". Amount: " + amount);
-            bookings.add(new Booking(batchFrom.getAccount(),batchFrom.getRegister(),amount.getValue()*-1,amount.getCurrency(),batchFrom,null));
-            bookings.add(new Booking(batchTo.getAccount(),batchTo.getRegister(),amount.getValue(),amount.getCurrency(),batchTo,null));
+            bookings.add(new Booking(batchFrom.getAccount(),batchFrom.getRegister(),amount.getValue()*-1,amount.getCurrency(),batchFrom));
+            bookings.add(new Booking(batchTo.getAccount(),batchTo.getRegister(),amount.getValue(),amount.getCurrency(),batchTo));
         }
         return new Journal(bookings, "BalanceTransfer");
     }
 
     @Transactional
-    private Journal storeJournal(@NonNull Journal journal, @Nullable Set<Transaction> transactions) throws BookingException {
+    private Journal storeJournal(@NonNull Journal journal, @Nullable AdditionalBookingInfo additionalBookingInfo) throws BookingException {
         if (!JournalUtil.isBalanced(journal)) {
             throw new BookingException("Journal not balanced for booking " + journal.getEventType());
         }
@@ -122,27 +136,38 @@ public class BookingService {
             log.info("Created booking " + booking);
             batchService.updateBatchEntries(booking);
         }
-        if (transactions != null) {
-            for (Transaction t : transactions) {
+        if (additionalBookingInfo != null && additionalBookingInfo.getTransactions() != null) {
+            for (Transaction t : additionalBookingInfo.getTransactions()) {
                 transactionRepository.save(t);
             }
         }
         return journal;
     }
 
-    private Map<Account,Fee> findFees(@NonNull Set<Transaction> transactions, @NonNull EventType eventType) {
+    private void findFees(@NonNull AdditionalBookingInfo additionalBookingInfo, @NonNull EventType eventType) {
+        Map<Account,Fee> feeMap = new HashMap<>();
+        additionalBookingInfo.setFees(feeMap);
+        if (additionalBookingInfo.getTransactions() == null || additionalBookingInfo.getTransactions().isEmpty()) {
+            return;
+        }
         Set<Account> accounts = new HashSet<>();
+        Set<Integer> addedAccountIds = new HashSet<>();
         Set<PaymentMethod> paymentMethods = new HashSet<>();
-        for (Transaction t : transactions) {
-            accounts.add(t.getMerchantAccount());
-            accounts.add(t.getPartnerAccount());
+        for (Transaction t : additionalBookingInfo.getTransactions()) {
+            if (t.getMerchantAccount() != null && !addedAccountIds.contains(t.getMerchantAccount().getId())) {
+                accounts.add(t.getMerchantAccount());
+                addedAccountIds.add(t.getMerchantAccount().getId());
+            }
+            if (t.getPartnerAccount() != null && !addedAccountIds.contains(t.getPartnerAccount().getId())) {
+                accounts.add(t.getPartnerAccount());
+                addedAccountIds.add(t.getPartnerAccount().getId());
+            }
             if (t.getPaymentMethod() != null) {
                 paymentMethods.add(t.getPaymentMethod());
             }
         }
-        Map<Account,Fee> feeMap = new HashMap<>();
         if (paymentMethods.size() != 1) {
-            return feeMap;
+            return;
         }
         for (Account account : accounts) {
             Contract contract = account.getContract();
@@ -175,7 +200,7 @@ public class BookingService {
                 feeMap.put(account,matchedFee);
             }
         }
-        return feeMap;
+        additionalBookingInfo.setFees(feeMap);
     }
 
     @Autowired

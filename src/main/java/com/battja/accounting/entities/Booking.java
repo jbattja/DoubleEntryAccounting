@@ -26,8 +26,21 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
+    @ManyToOne
+    @JoinColumn(name = "report_line_id")
+    private ReportLine reportLine;
 
     protected Booking() {}
+    public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull Amount.Currency currency,
+                   Batch batch) {
+        this.account = account;
+        this.register = register;
+        this.amount = amount;
+        this.currency = currency;
+        this.batch = batch;
+    }
+
+
 
     public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull Amount.Currency currency,
                    Batch batch, Transaction transaction) {
@@ -37,6 +50,16 @@ public class Booking {
         this.currency = currency;
         this.batch = batch;
         this.transaction = transaction;
+    }
+
+    public Booking(@NonNull Account account, @NonNull RegisterType register, @NonNull Long amount, @NonNull Amount.Currency currency,
+                   Batch batch, ReportLine reportLine) {
+        this.account = account;
+        this.register = register;
+        this.amount = amount;
+        this.currency = currency;
+        this.batch = batch;
+        this.reportLine = reportLine;
     }
 
     @Override
@@ -112,5 +135,11 @@ public class Booking {
         this.transaction = transaction;
     }
 
+    public ReportLine getReportLine() {
+        return reportLine;
+    }
 
+    public void setReportLine(ReportLine reportLine) {
+        this.reportLine = reportLine;
+    }
 }

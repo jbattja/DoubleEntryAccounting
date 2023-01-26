@@ -11,7 +11,11 @@ public enum RegisterType implements DisplayableEntity {
     FEES(true),
     REVENUE(false),
     EARLY_SETTLEMENT(false),
-    PAYOUTS(true);
+    PAYOUTS(true),
+    REPORT_RECEIVABLE(false),
+    REPORT_UNMATCHED(true),
+    REPORT_MATCHED(true)
+    ;
 
     private final boolean requiresEntryReconciliation;
 

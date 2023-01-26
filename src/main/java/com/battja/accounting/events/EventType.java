@@ -12,7 +12,9 @@ public enum EventType implements DisplayableEntity {
     CANCELLED(CancelEvent.class),
     SETTLED_TO_MERCHANT(SettledToMerchantEvent.class),
     SETTLEMENT_FAILED(SettlementFailedEvent.class),
-    MERCHANT_WITHDRAWAL(MerchantWithdrawalEvent.class);
+    MERCHANT_WITHDRAWAL(MerchantWithdrawalEvent.class),
+    REPORT_RECEIVED(ReportLineReceivedEvent.class)
+    ;
 
     @Override
     public String toString() {

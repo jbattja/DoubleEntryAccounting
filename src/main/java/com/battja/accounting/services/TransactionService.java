@@ -254,9 +254,10 @@ public class TransactionService {
         Set<Transaction> transactionList = new HashSet<>();
         transactionList.add(paymentList.get(0));
         transactionList.add(capture);
-        AdditionalInfo additionalInfo = new AdditionalInfo();
-        additionalInfo.setFundingSource(Account.defaultPspAccount());
-        Journal journal = bookingService.book(transactionList, EventType.SETTLED_TO_MERCHANT, additionalInfo);
+        AdditionalBookingInfo additionalBookingInfo = new AdditionalBookingInfo();
+        additionalBookingInfo.setFundingSource(Account.defaultPspAccount());
+        additionalBookingInfo.setTransactions(transactionList);
+        Journal journal = bookingService.book(EventType.SETTLED_TO_MERCHANT, additionalBookingInfo,null);
         if (journal == null) {
             throw new BookingException("Failed to book settlement failed");
         }
@@ -315,9 +316,9 @@ public class TransactionService {
                 continue;
             }
             Transaction withdrawal = newWithdrawal(amount,batch.getAccount(),bankAccount);
-            AdditionalInfo additionalInfo = new AdditionalInfo();
-            additionalInfo.setFromBatch(batch);
-            journals.add(bookingService.book(withdrawal, EventType.MERCHANT_WITHDRAWAL, additionalInfo));
+            Set<Batch> batches = new HashSet<>();
+            batches.add(batch);
+            journals.add(bookingService.book(withdrawal, EventType.MERCHANT_WITHDRAWAL, batches));
         }
         return journals.size() > 0;
     }
