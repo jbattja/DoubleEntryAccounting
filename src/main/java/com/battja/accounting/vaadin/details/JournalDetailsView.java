@@ -2,6 +2,7 @@ package com.battja.accounting.vaadin.details;
 
 import com.battja.accounting.entities.Booking;
 import com.battja.accounting.entities.Journal;
+import com.battja.accounting.entities.ReportLine;
 import com.battja.accounting.entities.Transaction;
 import com.battja.accounting.services.JournalService;
 import com.battja.accounting.vaadin.MainLayout;
@@ -33,6 +34,7 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
     private Integer journalId;
     private Journal journal;
     private Set<Transaction> transactions;
+    private Set<ReportLine> reportLines;
 
     public JournalDetailsView(JournalService journalService) {
         this.journalService = journalService;
@@ -59,6 +61,11 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
                 add(new H4("Transactions"));
                 add(transactionGrid);
             }
+            Grid<ReportLine> reportLinesGrid = createReportLinesGrid();
+            if (!reportLines.isEmpty()) {
+                add(new H4("Report Lines"));
+                add(reportLinesGrid);
+            }
             if (!journal.getBookings().isEmpty()) {
                 add(new H4("Bookings"));
                 add(GridCreator.createBookingGrid(journal.getBookings()));
@@ -77,9 +84,13 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
         Grid<Transaction> transactionGrid = new Grid<>(Transaction.class);
         transactionGrid.removeAllColumns();
         transactions = new HashSet<>();
+        reportLines = new HashSet<>();
         for (Booking b: journal.getBookings()) {
             if (b.getTransaction() != null) {
                 transactions.add(b.getTransaction());
+            }
+            if (b.getReportLine() != null) {
+                reportLines.add(b.getReportLine());
             }
         }
         transactionGrid.setItems(transactions);
@@ -93,5 +104,27 @@ public class JournalDetailsView extends VerticalLayout implements HasUrlParamete
         transactionGrid.setAllRowsVisible(true);
         return transactionGrid;
     }
+
+    private Grid<ReportLine> createReportLinesGrid() {
+        Grid<ReportLine> reportLineGrid = new Grid<>(ReportLine.class);
+        reportLineGrid.removeAllColumns();
+        reportLines = new HashSet<>();
+        for (Booking b: journal.getBookings()) {
+            if (b.getReportLine() != null) {
+                reportLines.add(b.getReportLine());
+            }
+        }
+        reportLineGrid.setItems(reportLines);
+        reportLineGrid.addColumn(ReportLine::getLineType).setHeader("Type");
+        reportLineGrid.addColumn(ReportLine::getReference).setHeader("Reference");
+        reportLineGrid.addItemClickListener(reportLineItemClickEvent -> reportLineGrid.getUI().ifPresent(
+                ui -> ui.navigate(
+                        ReportLineDetailsView.class,
+                        String.valueOf(reportLineItemClickEvent.getItem().getId()))
+        ));
+        reportLineGrid.setAllRowsVisible(true);
+        return reportLineGrid;
+    }
+
 
 }

@@ -13,7 +13,8 @@ public enum EventType implements DisplayableEntity {
     SETTLED_TO_MERCHANT(SettledToMerchantEvent.class),
     SETTLEMENT_FAILED(SettlementFailedEvent.class),
     MERCHANT_WITHDRAWAL(MerchantWithdrawalEvent.class),
-    REPORT_RECEIVED(ReportLineReceivedEvent.class)
+    REPORT_RECEIVED(ReportLineReceivedEvent.class),
+    REPORT_LINE_MATCHED(ReportLineMatchedEvent.class),
     ;
 
     @Override

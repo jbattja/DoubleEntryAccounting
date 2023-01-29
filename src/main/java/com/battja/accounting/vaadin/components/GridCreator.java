@@ -170,6 +170,9 @@ public class GridCreator {
         reportLineGrid.addColumn(ReportLine::getCurrency).setHeader("Currency");
         reportLineGrid.addColumn(ReportLine::getGrossAmount).setHeader("Gross Amount");
         reportLineGrid.addColumn(ReportLine::getNetAmount).setHeader("Net Amount");
+        reportLineGrid.addItemClickListener(accountItemClickEvent -> reportLineGrid.getUI().ifPresent(
+                ui -> ui.navigate(ReportLineDetailsView.class,String.valueOf(accountItemClickEvent.getItem().getId()))));
+
         return reportLineGrid;
     }
 

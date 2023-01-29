@@ -52,15 +52,22 @@ public class BatchService {
         } else {
             Set<Journal> journals = new HashSet<>();
             journals.add(booking.getJournal());
-            BatchEntry batchEntry = new BatchEntry(booking.getBatch(), journals, booking.getTransaction(), new Amount(booking.getCurrency(), booking.getAmount()));
+            BatchEntry batchEntry = new BatchEntry(booking.getBatch(), journals, booking.getTransaction(), booking.getReportLine(), new Amount(booking.getCurrency(), booking.getAmount()));
             batchEntryRepository.save(batchEntry);
         }
     }
 
     private BatchEntry findExistingBatchEntry(Booking booking) throws BatchClosedException {
-        List<BatchEntry> existingBatchEntries = batchEntryRepository.findByTransaction(booking.getTransaction());
+        List<BatchEntry> existingBatchEntries = new ArrayList<>();
+        if (booking.getTransaction() != null) {
+            existingBatchEntries = batchEntryRepository.findByTransaction(booking.getTransaction());
+        } else if (booking.getReportLine() != null) {
+            existingBatchEntries = batchEntryRepository.findByReportLine(booking.getReportLine());
+        }
         for (BatchEntry entry : existingBatchEntries) {
-            if (entry.getBatch().getRegister().equals(booking.getRegister()) && entry.getBatch().getAccount().getId().equals(booking.getAccount().getId())) {
+            if (entry.getBatch().getRegister().equals(booking.getRegister())
+                    && entry.getCurrency().equals(booking.getCurrency())
+                    && entry.getBatch().getAccount().getId().equals(booking.getAccount().getId())) {
                 if (entry.getBatch().getStatus().equals(Batch.BatchStatus.CLOSED)) {
                     throw new BatchClosedException("Batch already closed: " + entry.getBatch());
                 }

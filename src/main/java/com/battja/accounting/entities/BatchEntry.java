@@ -22,6 +22,9 @@ public class BatchEntry {
     @ManyToOne
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
+    @ManyToOne
+    @JoinColumn(name = "report_line_id")
+    private ReportLine reportLine;
     @Enumerated(EnumType.STRING)
     private Amount.Currency currency;
     private Long originalAmount;
@@ -29,10 +32,11 @@ public class BatchEntry {
 
     protected BatchEntry() {}
 
-    public BatchEntry(Batch batch, Set<Journal> journals, Transaction transaction, Amount amount) {
+    public BatchEntry(Batch batch, Set<Journal> journals, Transaction transaction, ReportLine reportLine, Amount amount) {
         this.batch = batch;
         this.journals = journals;
         this.transaction = transaction;
+        this.reportLine = reportLine;
         this.openAmount = amount.getValue();
         this.originalAmount = amount.getValue();
         this.currency = amount.getCurrency();
@@ -76,6 +80,14 @@ public class BatchEntry {
 
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
+    }
+
+    public ReportLine getReportLine() {
+        return reportLine;
+    }
+
+    public void setReportLine(ReportLine reportLine) {
+        this.reportLine = reportLine;
     }
 
     public Amount.Currency getCurrency() {

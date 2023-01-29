@@ -3,8 +3,7 @@ package com.battja.accounting.services;
 import com.battja.accounting.entities.*;
 import com.battja.accounting.events.EventType;
 import com.battja.accounting.exceptions.BookingException;
-import com.battja.accounting.repositories.PartnerReportRepository;
-import com.battja.accounting.repositories.ReportLineRepository;
+import com.battja.accounting.repositories.*;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PartnerReportService {
@@ -23,6 +24,10 @@ public class PartnerReportService {
 
     public PartnerReport getPartnerReport(@NonNull Integer partnerReportId) {
         return partnerReportRepository.findById(partnerReportId).orElse(null);
+    }
+
+    public ReportLine getReportLine(@NonNull Integer reportLineId) {
+        return reportLineRepository.findById(reportLineId).orElse(null);
     }
 
     @Transactional
@@ -64,6 +69,43 @@ public class PartnerReportService {
 
     public List<PartnerReport> listAll() {
         return partnerReportRepository.findAll();
+    }
+
+    @Transactional
+    public Journal matchReportLineToTransaction(@NonNull ReportLine reportLine, @NonNull BatchEntry captureEntry) {
+        if (!canMatch(reportLine)) {
+            log.warn("cannot match, no unmatched balance: " + reportLine);
+            return null;
+        }
+        List<Booking> reportLineBookings = getBookingsByReportLine(reportLine);
+        Booking unmatchedRegisterBooking = null;
+        for (Booking b : reportLineBookings) {
+            if (b.getRegister().equals(RegisterType.REPORT_UNMATCHED)) {
+                unmatchedRegisterBooking = b;
+                break;
+            }
+        }
+        if (unmatchedRegisterBooking == null) {
+            log.warn("cannot match, no unmatched register found for report line: " + reportLine);
+            return null;
+        }
+        if (!captureEntry.getOpenAmount().equals(unmatchedRegisterBooking.getAmount())) {
+            log.warn("cannot match, amounts not equal");
+            return null;
+        }
+        if (!captureEntry.getCurrency().equals(unmatchedRegisterBooking.getCurrency())) {
+            log.warn("cannot match, currencies not equal");
+            return null;
+        }
+        AdditionalBookingInfo additionalBookingInfo = new AdditionalBookingInfo();
+        Set<Transaction> transactions = new HashSet<>();
+        transactions.add(captureEntry.getTransaction());
+        additionalBookingInfo.setTransactions(transactions);
+        additionalBookingInfo.setReportLine(reportLine);
+        Set<Batch> batches = new HashSet<>();
+        batches.add(unmatchedRegisterBooking.getBatch());
+        batches.add(captureEntry.getBatch());
+        return bookingService.book(EventType.REPORT_LINE_MATCHED,additionalBookingInfo,batches);
     }
 
     @Transactional
@@ -113,6 +155,7 @@ public class PartnerReportService {
                 ReportLine line = new ReportLine();
                 line.setCurrency(entry.getCurrency());
                 line.setGrossAmount(entry.getOpenAmount() * -1);
+                line.setNetAmount(entry.getOpenAmount() * -1);
                 switch (entry.getTransaction().getType()) {
                     case CAPTURE -> line.setLineType(ReportLine.LineType.CAPTURE);
                     case REFUND -> line.setLineType(ReportLine.LineType.REFUND);
@@ -129,6 +172,48 @@ public class PartnerReportService {
         return createPartnerReport(report);
     }
 
+    private long getRemainingBalance(RegisterType registerType, ReportLine reportLine) {
+        List<Booking> bookingsList = bookingRepository.findByReportLine(reportLine);
+        long balance = 0L;
+        for (Booking b : bookingsList) {
+            if (b.getRegister().equals(registerType) && b.getAccount().getId().equals(reportLine.getPartnerReport().getPartner().getId())) {
+                balance = balance + b.getAmount();
+            }
+        }
+        return balance;
+    }
+
+    public boolean canMatch(@NonNull ReportLine reportLine) {
+        return getRemainingBalance(RegisterType.REPORT_UNMATCHED, reportLine) != 0L;
+    }
+
+    public Set<Journal> getJournalsByReportLine(ReportLine reportLine) {
+        List<Booking> bookings = bookingRepository.findByReportLine(reportLine);
+        Set<Journal> journals = new HashSet<>();
+        for (Booking entry : bookings) {
+            journals.add(entry.getJournal());
+        }
+        return journals;
+    }
+
+    public List<Booking> getBookingsByReportLine(ReportLine reportLine) {
+        return bookingRepository.findByReportLine(reportLine);
+    }
+
+    public List<BatchEntry> findMatchingTransactions(ReportLine reportLine) {
+        List<Transaction> transactions = transactionRepository.findByTransactionReference(reportLine.getReference());
+        List<BatchEntry> returnList = new ArrayList<>();
+        if (transactions != null && !transactions.isEmpty()) {
+            List<BatchEntry> batchEntries = batchEntryRepository.findByTransactionIn(transactions);
+            for (BatchEntry entry : batchEntries) {
+                if (!entry.getBatch().getAccount().getAccountType().equals(Account.AccountType.PARTNER_ACCOUNT)) {
+                    continue;
+                }
+                returnList.add(entry);
+            }
+        }
+        return returnList;
+    }
 
     @Autowired
     PartnerReportRepository partnerReportRepository;
@@ -138,5 +223,11 @@ public class PartnerReportService {
     BatchService batchService;
     @Autowired
     BookingService bookingService;
+    @Autowired
+    BookingRepository bookingRepository;
+    @Autowired
+    TransactionRepository transactionRepository;
+    @Autowired
+    BatchEntryRepository batchEntryRepository;
 
 }
