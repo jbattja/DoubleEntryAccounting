@@ -12,5 +12,5 @@ public interface BatchRepository extends JpaRepository<Batch,Integer> {
 
     List<Batch> findByAccountAndRegisterAndStatus(Account account, RegisterType register, Batch.BatchStatus status);
     Optional<Batch> findFirstByAccountAndRegisterOrderByBatchNumberDesc(Account account, RegisterType register);
-
+    List<Batch> findByRegisterAndStatusInAndAccountIn(RegisterType register, List<Batch.BatchStatus> statuses, List<Account> accounts);
 }

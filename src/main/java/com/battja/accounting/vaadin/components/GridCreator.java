@@ -90,6 +90,89 @@ public class GridCreator {
         }
     }
 
+    public static Grid<PartnerReport> createPartnerReportGrid(Collection<PartnerReport> partnerReports) {
+        Grid<PartnerReport> partnerReportGrid = new Grid<>(PartnerReport.class);
+        GridListDataView<PartnerReport> dataView = partnerReportGrid.setItems(partnerReports);
+        partnerReportGrid.removeAllColumns();
+        Grid.Column<PartnerReport> partnerColumn = partnerReportGrid.addColumn(partnerReport ->
+                partnerReport.getPartner() != null ? partnerReport.getPartner().getAccountName() : "").setHeader("Partner");
+        Grid.Column<PartnerReport> createdColumn = partnerReportGrid.addColumn(PartnerReport::getCreatedDate).setHeader("Created");
+        Grid.Column<PartnerReport> referenceColumn = partnerReportGrid.addColumn(PartnerReport::getReference).setHeader("Reference");
+        Grid.Column<PartnerReport> reportStatusColumn = partnerReportGrid.addColumn(PartnerReport::getReportStatus).setHeader("Status");
+        partnerReportGrid.addItemClickListener(partnerReportItemClickEvent -> partnerReportGrid.getUI().ifPresent(
+                ui -> ui.navigate(PartnerReportDetailsView.class,String.valueOf(partnerReportItemClickEvent.getItem().getId()))));
+        PartnerReportFilter partnerReportFilter = new PartnerReportFilter(dataView);
+
+        Set<Account> partners = new HashSet<>();
+        for (PartnerReport report : partnerReports) {
+            partners.add(report.getPartner());
+        }
+
+        HeaderRow headerRow = partnerReportGrid.appendHeaderRow();
+        headerRow.getCell(partnerColumn).setComponent(new MultiSelectFilterHeader<>(partnerReportFilter::setPartner, partners));
+        headerRow.getCell(createdColumn).setComponent(new FilterHeader(partnerReportFilter::setCreatedDate));
+        headerRow.getCell(referenceColumn).setComponent(new FilterHeader(partnerReportFilter::setReference));
+        headerRow.getCell(reportStatusColumn).setComponent(new FilterHeader(partnerReportFilter::setStatus));
+        return partnerReportGrid;
+    }
+
+    private static class PartnerReportFilter {
+        private final GridListDataView<PartnerReport> dataView;
+
+        private Set<Account> partners;
+        private String createdDate;
+        private String reference;
+        private String status;
+
+        public PartnerReportFilter(GridListDataView<PartnerReport> dataView) {
+            this.dataView = dataView;
+            this.dataView.setFilter(this::test);
+        }
+
+        public void setPartner(Set<Account> partners) {
+            this.partners = partners;
+            this.dataView.refreshAll();
+        }
+
+        public void setCreatedDate(String createdDate) {
+            this.createdDate = createdDate;
+            this.dataView.refreshAll();
+        }
+
+        public void setReference(String reference) {
+            this.reference = reference;
+            this.dataView.refreshAll();
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+            this.dataView.refreshAll();
+        }
+
+        public boolean test(PartnerReport partnerReport) {
+            if(partners != null && !partners.isEmpty() && !partners.contains(partnerReport.getPartner())) {
+                return false;
+            }
+            return (
+                    matches(partnerReport.getCreatedDate().toString(), createdDate)
+                            && matches((partnerReport.getReference()),reference)
+                            && matches((partnerReport.getReportStatus().toString()),status)
+            );
+        }
+    }
+
+    public static Grid<ReportLine> createReportLineGrid(Collection<ReportLine> reportLines) {
+        Grid<ReportLine> reportLineGrid = new Grid<>(ReportLine.class);
+        GridListDataView<ReportLine> dataView = reportLineGrid.setItems(reportLines);
+        reportLineGrid.removeAllColumns();
+        reportLineGrid.addColumn(ReportLine::getLineType).setHeader("Type");
+        reportLineGrid.addColumn(ReportLine::getReference).setHeader("Reference");
+        reportLineGrid.addColumn(ReportLine::getCurrency).setHeader("Currency");
+        reportLineGrid.addColumn(ReportLine::getGrossAmount).setHeader("Gross Amount");
+        reportLineGrid.addColumn(ReportLine::getNetAmount).setHeader("Net Amount");
+        return reportLineGrid;
+    }
+
     public static Grid<Account> createAccountGrid(Collection<Account> accounts) {
         Grid<Account> accountGrid = new Grid<>(Account.class);
         GridListDataView<Account> dataView = accountGrid.setItems(accounts);

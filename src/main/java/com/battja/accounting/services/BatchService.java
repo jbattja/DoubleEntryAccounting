@@ -101,6 +101,7 @@ public class BatchService {
         return batch;
     }
 
+    @Transactional
     public Batch createNewUnavailableBatch(@NonNull Account account, @NonNull RegisterType registerType) {
         Integer batchNumber = 0;
         Batch lastBatch = batchRepository.findFirstByAccountAndRegisterOrderByBatchNumberDesc(account, registerType).orElse(null);
@@ -141,8 +142,7 @@ public class BatchService {
         return hasOpenAmounts(batch);
     }
 
-
-        public boolean canBatchClose(@NonNull Batch batch) {
+    public boolean canBatchClose(@NonNull Batch batch) {
         if (batch.getCloseDate() != null) {
             return false;
         }
@@ -202,11 +202,19 @@ public class BatchService {
         }
     }
 
+    public List<Batch> findCaptureBatches(Account account, List<Batch.BatchStatus> statuses) {
+        List<Account> accounts = accountService.listChildren(account);
+        accounts.add(account);
+        return batchRepository.findByRegisterAndStatusInAndAccountIn(RegisterType.CAPTURED,statuses,accounts);
+    }
+
     @Autowired
     BatchRepository batchRepository;
     @Autowired
     BatchEntryRepository batchEntryRepository;
     @Autowired
     BookingRepository bookingRepository;
+    @Autowired
+    AccountService accountService;
 
 }

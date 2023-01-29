@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-public class Batch {
+public class Batch implements DisplayableEntity {
 
     public enum BatchStatus implements DisplayableEntity { CLOSED, AVAILABLE, ENDED;
 
@@ -57,6 +57,12 @@ public class Batch {
                 "Batch[id=%d, batchNumber='%d', account='%s', register='%s']",
                 id, batchNumber, account == null ? null : account.getAccountName(), register);
     }
+
+    @Override
+    public String getDisplayName() {
+        return this.account != null ? this.account.getDisplayName() + " : " + this.getBatchNumber() : this.getBatchNumber().toString();
+    }
+
 
 
     public Integer getId() {
